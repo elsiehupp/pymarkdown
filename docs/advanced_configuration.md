@@ -28,7 +28,7 @@ flags.  For these special cases, the command line setting is
 further defined to state that disabling a rule takes priority
 over enabling a rule.  While it is highly unlikely that someone
 will specify both actions at the same time, we felt it was
-important to specify the order to eliminate any possible confusion.
+important to specify the order to end any possible confusion.
 
 ### Command Line Settings
 
@@ -87,11 +87,11 @@ is followed by the name of a configuration file to load and use
 to set any configuration values.  While there is only support
 for a configuration file with a JSON format for the initial
 release, support for multiple formats is planned for after
-the initial release.
+the first releases.
 
 ##### JSON Format
 
-For the initial release, the configuration file must be
+For the first initial releases, the configuration file must be
 specified in a JSON format.  The primary reason that the
 JSON format was selected was due to the provision of
 distinct types of objects that may be specified: strings,
@@ -161,7 +161,7 @@ level of specification allows more confidence that the value that
 is provided for that property is interpreted properly.  Note that
 if you are using a configuration file format that already provides
 type information, such as the JSON format, this extra information
-may not be required.
+may not be needed.
 
 The type specification is performed using a prefix for the property value.
 Assuming that the `*` character refers to any character, the following
@@ -176,7 +176,7 @@ table specifies the type behavior:
 | `$!` | Boolean | `$!True`, `$!anything-else-is-false` |
 
 The only two interpretations that require further explanation are
-the integer and the boolean types.  The integer type attempts to
+the integer and the boolean types.  The integer type tries to
 translate any characters past the prefix as a signed integer.  The
 boolean type compares any characters past the prefix in a case-insensitive
 manner against the sequence `true`, setting the value to `True` if
@@ -189,6 +189,39 @@ to the command line and the application will stop.  If provided as
 part of a configuration format that does not provide typing, the
 `ValueError` will usually result in the default value being used for
 that configuration property.
+
+##### Examples
+
+From an above example, here is a configuration file in JSON format:
+
+```json
+{
+    "log" : {
+        "file": "log.txt",
+        "level": "INFO"
+    }
+}
+```
+
+Note that because JSON supports basic element types, the configuration subsystem can
+map those basic types to the types above that it understands: String to String,
+Number to Integer, and Boolean to Boolean.
+
+However, when specifying configuration values from the command line, everything is
+presented as a string, and that type information is not present.  This issue is present
+in this example from one of our users:
+
+```text
+$ pymarkdownlnt --strict-config --disable-rules=MD013 --set plugins.md024.siblings_only=True scan .
+BadPluginError encountered while configuring plugins:The value for property 'plugins.md024.siblings_only' must be of type 'bool'.
+```
+
+In this case, the user wanted to specify a Boolean value for the configuration
+property `plugins.md024.siblings_only`.  However, without any of the configuration
+type information from the beginning of this section, the value was specified as
+a string, not matching the desired Boolean value.  By replacing the value
+`True` with `$!True`, resulting in arguments of `--set plugins.md024.siblings_only=$!True`,
+the user was able to set things to get their desired effect.
 
 #### Specifying Strict Configuration Mode
 
@@ -302,7 +335,7 @@ These affect the collection of rule plugins and whether they are called.
 Enabling and disabling of plugins can be accomplished in two ways.  From the
 command line, the `--enable-rules` and `--disable-rules` arguments allow for a comma-separated
 set of rule identifiers to be specified in the next argument.  If a configuration file option
-is required, the plugin rule can be enabled as specified in the [Plugins Section](#plugins-section) below.
+is needed, the plugin rule can be enabled as specified in the [Plugins Section](#plugins-section) below.
 
 Additional rule plugins can be added to the configuration in one of two ways.  To test new rule plugins,
 the recommended way to add a rule plugin is to use the `--add-plugin` command line argument or more times.
