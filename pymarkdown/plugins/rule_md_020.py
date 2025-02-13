@@ -3,6 +3,7 @@ Module to implement a plugin that looks for text in a paragraph where a line sta
 with what could be a closed atx heading, except there is no spaces between the hashes
 and the text of the heading, either at the start, end, or both.
 """
+
 import re
 from typing import Any, Optional, cast
 
@@ -70,7 +71,7 @@ class RuleMd020(RulePlugin):
             plugin_description="No space present inside of the hashes on a possible Atx Closed Heading.",
             plugin_version="0.5.0",
             plugin_interface_version=1,
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md020.md",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md020.md",
         )
 
     def starting_new_file(self) -> None:
@@ -95,7 +96,9 @@ class RuleMd020(RulePlugin):
             assert self.__last_atx_token is not None
             if self.__is_in_normal_atx and self.__last_atx_token.is_text:
                 text_token = cast(TextMarkdownToken, self.__last_atx_token)
-                if text_token.token_text.endswith("#"):
+                if text_token.token_text.endswith(
+                    "#"
+                ) and not text_token.token_text.endswith("\\\b#"):
                     regex_match = re.search(r"\#+$", text_token.token_text)
                     assert regex_match is not None
                     self.report_next_token_error(

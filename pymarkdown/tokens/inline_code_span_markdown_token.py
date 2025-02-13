@@ -2,7 +2,9 @@
 Module to provide for an encapsulation of the inline code span element.
 """
 
-from typing import Optional, cast
+from typing import Optional, Union, cast
+
+from typing_extensions import override
 
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.tokens.inline_markdown_token import InlineMarkdownToken
@@ -45,17 +47,31 @@ class InlineCodeSpanMarkdownToken(InlineMarkdownToken):
         InlineMarkdownToken.__init__(
             self,
             MarkdownToken._token_inline_code_span,
-            MarkdownToken.extra_data_separator.join(
-                [
-                    self.__span_text,
-                    self.__extracted_start_backticks,
-                    self.__leading_whitespace,
-                    self.__trailing_whitespace,
-                ]
-            ),
+            self.__compose_extra_data_field(),
             line_number=line_number,
             column_number=column_number,
         )
+
+    def __compose_extra_data_field(self) -> str:
+        """
+        Compose the object's self.extra_data field from the local object's variables.
+        """
+        return MarkdownToken.extra_data_separator.join(
+            [
+                self.__span_text,
+                self.__extracted_start_backticks,
+                self.__leading_whitespace,
+                self.__trailing_whitespace,
+            ]
+        )
+
+    @override
+    def _modify_token(self, field_name: str, field_value: Union[str, int]) -> bool:
+        if field_name == "span_text" and isinstance(field_value, str):
+            self.__span_text = field_value
+            self._set_extra_data(self.__compose_extra_data_field())
+            return True
+        return False
 
     # pylint: disable=protected-access
     @staticmethod
@@ -123,7 +139,9 @@ class InlineCodeSpanMarkdownToken(InlineMarkdownToken):
             return ""
 
         current_inline_token = cast(InlineCodeSpanMarkdownToken, current_token)
-        span_text = ParserHelper.remove_all_from_text(current_inline_token.span_text)
+        span_text = ParserHelper.remove_all_from_text(
+            current_inline_token.span_text, include_noops=True
+        )
         leading_whitespace = ParserHelper.remove_all_from_text(
             current_inline_token.leading_whitespace
         )

@@ -4,7 +4,7 @@ Module to provide tests related to enabling or disabling rules.
 
 import os
 from test.markdown_scanner import MarkdownScanner
-from test.utils import write_temporary_configuration
+from test.utils import create_temporary_configuration_file
 
 
 def test_markdown_with_dash_e_single_by_name():
@@ -121,12 +121,10 @@ def test_markdown_with_enabled_by_configuration_id():
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"plugins": {"md999": {"enabled": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
-            "--log-level",
-            "DEBUG",
             "-c",
             configuration_file,
             "scan",
@@ -162,9 +160,6 @@ MD999>>completed_file
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_enabled_by_configuration_name():
@@ -181,14 +176,14 @@ def test_markdown_with_enabled_by_configuration_name():
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"plugins": {"debug-only": {"enabled": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
-            "--log-level",
-            "DEBUG",
+            # "--log-level",
+            # "DEBUG",
             "scan",
             source_path,
         ]
@@ -222,9 +217,6 @@ MD999>>completed_file
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_dash_d_single_by_name():

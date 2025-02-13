@@ -1,9 +1,11 @@
 """
 Module to provide tests related to the MD022 rule.
 """
+
 import os
 from test.markdown_scanner import MarkdownScanner
-from test.utils import write_temporary_configuration
+from test.rules.utils import execute_query_configuration_test, pluginQueryConfigTest
+from test.utils import create_temporary_configuration_file
 
 import pytest
 
@@ -1256,9 +1258,9 @@ def test_md022_bad_proper_line_spacing_atx_with_alternate_lines_above():
         "test", "resources", "rules", "md022", "proper_line_spacing_atx.md"
     )
     supplied_configuration = {"plugins": {"md022": {"lines_above": 2}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -1281,9 +1283,6 @@ def test_md022_bad_proper_line_spacing_atx_with_alternate_lines_above():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -1300,9 +1299,9 @@ def test_md022_good_double_line_spacing_above_atx_with_alternate_lines_above():
         "test", "resources", "rules", "md022", "double_line_spacing_above_atx.md"
     )
     supplied_configuration = {"plugins": {"md022": {"lines_above": 2}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--disable-rules",
             "md012",
@@ -1323,9 +1322,6 @@ def test_md022_good_double_line_spacing_above_atx_with_alternate_lines_above():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -1342,9 +1338,9 @@ def test_md022_bad_proper_line_spacing_atx_with_alternate_lines_below():
         "test", "resources", "rules", "md022", "proper_line_spacing_atx.md"
     )
     supplied_configuration = {"plugins": {"md022": {"lines_below": 2}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -1370,9 +1366,6 @@ def test_md022_bad_proper_line_spacing_atx_with_alternate_lines_below():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -1389,9 +1382,9 @@ def test_md022_good_double_line_spacing_above_atx_with_alternate_lines_below():
         "test", "resources", "rules", "md022", "double_line_spacing_below_atx.md"
     )
     supplied_configuration = {"plugins": {"md022": {"lines_below": 2}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--disable-rules",
             "md012",
@@ -1412,9 +1405,6 @@ def test_md022_good_double_line_spacing_above_atx_with_alternate_lines_below():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -1437,9 +1427,9 @@ def test_md022_good_double_line_spacing_above_and_below_atx_with_alternate_lines
     supplied_configuration = {
         "plugins": {"md022": {"lines_below": 2, "lines_above": 2}}
     }
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--disable-rules",
             "md012",
@@ -1460,9 +1450,6 @@ def test_md022_good_double_line_spacing_above_and_below_atx_with_alternate_lines
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -1514,9 +1501,9 @@ def test_md022_bad_alternating_heading_types_with_alternate_spacing():
     supplied_configuration = {
         "plugins": {"md022": {"lines_below": 2, "lines_above": 2}}
     }
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--disable-rules",
             "MD003,md025",
@@ -1559,9 +1546,6 @@ def test_md022_bad_alternating_heading_types_with_alternate_spacing():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -1581,9 +1565,9 @@ def test_md022_bad_alternating_heading_types_with_alternate_spacing_and_bad_conf
     supplied_configuration = {
         "plugins": {"md022": {"lines_below": -2, "lines_above": 2}}
     }
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--disable-rules",
             "MD003,md025",
@@ -1614,9 +1598,6 @@ def test_md022_bad_alternating_heading_types_with_alternate_spacing_and_bad_conf
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -1633,9 +1614,9 @@ def test_md022_bad_alternating_heading_types_with_alternate_spacing_and_bad_conf
     supplied_configuration = {
         "plugins": {"md022": {"lines_below": -2, "lines_above": 2}}
     }
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--strict-config",
             "--disable-rules",
@@ -1660,9 +1641,6 @@ def test_md022_bad_alternating_heading_types_with_alternate_spacing_and_bad_conf
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -1945,3 +1923,436 @@ def test_md022_fenced_block_before_header():
     execute_results.assert_results(
         expected_output, expected_error, expected_return_code
     )
+
+
+@pytest.mark.rules
+def test_md022_issue_1268():
+    """
+    Test to make sure this rule
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_file_contents = """# My header
+
+<!-- pyml disable-num-lines 3 md011,md013-->
+
+Some long lines
+"""
+    with create_temporary_configuration_file(
+        source_file_contents, file_name_suffix=".md"
+    ) as source_path:
+        supplied_arguments = [
+            "scan",
+            source_path,
+        ]
+
+        expected_return_code = 0
+        expected_output = ""
+        expected_error = ""
+
+        # Act
+        execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+        # Assert
+        execute_results.assert_results(
+            expected_output, expected_error, expected_return_code
+        )
+
+
+@pytest.mark.rules
+def test_md022_good_with_pragmas_blanks_after_around_and_before():
+    """
+    Test to make sure this rule works properly with pragmas.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_file_contents = """# Heading 1
+
+<!--pyml disable-num-lines 1 md012-->
+
+Some text
+
+Some more text
+
+<!--pyml disable-num-lines 1 md012-->
+
+## Heading 2
+
+<!--pyml disable-num-lines 5 md012-->
+
+## Heading 3
+"""
+    with create_temporary_configuration_file(
+        source_file_contents, file_name_suffix=".md"
+    ) as source_path:
+        supplied_configuration = {
+            "plugins": {"md022": {"lines_below": 1, "lines_above": 1}}
+        }
+        with create_temporary_configuration_file(
+            supplied_configuration
+        ) as configuration_file:
+            supplied_arguments = [
+                "-c",
+                configuration_file,
+                "scan",
+                source_path,
+            ]
+
+            expected_return_code = 0
+            expected_output = ""
+            expected_error = ""
+
+            # Act
+            execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+            # Assert
+            execute_results.assert_results(
+                expected_output, expected_error, expected_return_code
+            )
+
+
+@pytest.mark.rules
+def test_md022_bad_with_pragmas_blanks_after_around_and_before():
+    """
+    Test to make sure this rule works properly with pragmas.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_file_contents = """# Heading 1
+
+<!--pyml disable-num-lines 1 md012-->
+
+Some text
+
+Some more text
+
+<!--pyml disable-num-lines 1 md012-->
+
+## Heading 2
+
+<!--pyml disable-num-lines 5 md012-->
+
+## Heading 3
+"""
+    with create_temporary_configuration_file(
+        source_file_contents, file_name_suffix=".md"
+    ) as source_path:
+        supplied_configuration = {
+            "plugins": {"md022": {"lines_below": 2, "lines_above": 2}}
+        }
+        with create_temporary_configuration_file(
+            supplied_configuration
+        ) as configuration_file:
+            supplied_arguments = [
+                "-c",
+                configuration_file,
+                "scan",
+                source_path,
+            ]
+
+            expected_return_code = 1
+            expected_output = f"""{source_path}:1:1: MD022: Headings should be surrounded by blank lines. [Expected: 2; Actual: 1; Below] (blanks-around-headings,blanks-around-headers)
+{source_path}:11:1: MD022: Headings should be surrounded by blank lines. [Expected: 2; Actual: 1; Above] (blanks-around-headings,blanks-around-headers)
+{source_path}:11:1: MD022: Headings should be surrounded by blank lines. [Expected: 2; Actual: 1; Below] (blanks-around-headings,blanks-around-headers)
+{source_path}:15:1: MD022: Headings should be surrounded by blank lines. [Expected: 2; Actual: 1; Above] (blanks-around-headings,blanks-around-headers)
+{source_path}:15:1: MD022: Headings should be surrounded by blank lines. [Expected: 2; Actual: 1; Below] (blanks-around-headings,blanks-around-headers)"""
+            expected_error = ""
+
+            # Act
+            execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+            # Assert
+            execute_results.assert_results(
+                expected_output, expected_error, expected_return_code
+            )
+
+
+@pytest.mark.rules
+def test_md022_good_with_pragmas_blanks_before():
+    """
+    Test to make sure this rule works properly with pragmas.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_file_contents = """# Heading 1
+
+<!--pyml disable-num-lines 1 md012-->
+
+Some text
+"""
+    with create_temporary_configuration_file(
+        source_file_contents, file_name_suffix=".md"
+    ) as source_path:
+        supplied_configuration = {
+            "plugins": {"md022": {"lines_below": 1, "lines_above": 1}}
+        }
+        with create_temporary_configuration_file(
+            supplied_configuration
+        ) as configuration_file:
+            supplied_arguments = [
+                "-c",
+                configuration_file,
+                "scan",
+                source_path,
+            ]
+
+            expected_return_code = 0
+            expected_output = ""
+            expected_error = ""
+
+            # Act
+            execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+            # Assert
+            execute_results.assert_results(
+                expected_output, expected_error, expected_return_code
+            )
+
+
+@pytest.mark.rules
+def test_md022_bad_with_pragmas_blanks_before():
+    """
+    Test to make sure this rule works properly with pragmas.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_file_contents = """# Heading 1
+
+<!--pyml disable-num-lines 1 md012-->
+
+Some text
+"""
+    with create_temporary_configuration_file(
+        source_file_contents, file_name_suffix=".md"
+    ) as source_path:
+        supplied_configuration = {
+            "plugins": {"md022": {"lines_below": 2, "lines_above": 2}}
+        }
+        with create_temporary_configuration_file(
+            supplied_configuration
+        ) as configuration_file:
+            supplied_arguments = [
+                "-c",
+                configuration_file,
+                "scan",
+                source_path,
+            ]
+
+            expected_return_code = 1
+            expected_output = f"""{source_path}:1:1: MD022: Headings should be surrounded by blank lines. [Expected: 2; Actual: 1; Below] (blanks-around-headings,blanks-around-headers)"""
+            expected_error = ""
+
+            # Act
+            execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+            # Assert
+            execute_results.assert_results(
+                expected_output, expected_error, expected_return_code
+            )
+
+
+@pytest.mark.rules
+def test_md022_good_with_pragmas_blanks_around():
+    """
+    Test to make sure this rule works properly with pragmas.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_file_contents = """Some text
+
+<!--pyml disable-num-lines 1 md012-->
+
+## Heading 2
+
+<!--pyml disable-num-lines 5 md012-->
+
+Some more text
+"""
+    with create_temporary_configuration_file(
+        source_file_contents, file_name_suffix=".md"
+    ) as source_path:
+        supplied_configuration = {
+            "plugins": {"md022": {"lines_below": 1, "lines_above": 1}}
+        }
+        with create_temporary_configuration_file(
+            supplied_configuration
+        ) as configuration_file:
+            supplied_arguments = [
+                "-c",
+                configuration_file,
+                "scan",
+                source_path,
+            ]
+
+            expected_return_code = 0
+            expected_output = ""
+            expected_error = ""
+
+            # Act
+            execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+            # Assert
+            execute_results.assert_results(
+                expected_output, expected_error, expected_return_code
+            )
+
+
+@pytest.mark.rules
+def test_md022_bad_with_pragmas_blanks_around():
+    """
+    Test to make sure this rule works properly with pragmas.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_file_contents = """Some text
+
+<!--pyml disable-num-lines 1 md012-->
+
+## Heading 2
+
+<!--pyml disable-num-lines 5 md012-->
+
+Some more text
+"""
+    with create_temporary_configuration_file(
+        source_file_contents, file_name_suffix=".md"
+    ) as source_path:
+        supplied_configuration = {
+            "plugins": {"md022": {"lines_below": 2, "lines_above": 2}}
+        }
+        with create_temporary_configuration_file(
+            supplied_configuration
+        ) as configuration_file:
+            supplied_arguments = [
+                "-c",
+                configuration_file,
+                "scan",
+                source_path,
+            ]
+
+            expected_return_code = 1
+            expected_output = f"""{source_path}:5:1: MD022: Headings should be surrounded by blank lines. [Expected: 2; Actual: 1; Above] (blanks-around-headings,blanks-around-headers)
+{source_path}:5:1: MD022: Headings should be surrounded by blank lines. [Expected: 2; Actual: 1; Below] (blanks-around-headings,blanks-around-headers)"""
+            expected_error = ""
+
+            # Act
+            execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+            # Assert
+            execute_results.assert_results(
+                expected_output, expected_error, expected_return_code
+            )
+
+
+@pytest.mark.rules
+def test_md022_good_with_pragmas_blanks_after():
+    """
+    Test to make sure this rule works properly with pragmas.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_file_contents = """<!--pyml disable-num-lines 5 md012-->
+
+## Heading 3
+"""
+    with create_temporary_configuration_file(
+        source_file_contents, file_name_suffix=".md"
+    ) as source_path:
+        supplied_configuration = {
+            "plugins": {"md022": {"lines_below": 1, "lines_above": 1}}
+        }
+        with create_temporary_configuration_file(
+            supplied_configuration
+        ) as configuration_file:
+            supplied_arguments = [
+                "-c",
+                configuration_file,
+                "scan",
+                source_path,
+            ]
+
+            expected_return_code = 0
+            expected_output = ""
+            expected_error = ""
+
+            # Act
+            execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+            # Assert
+            execute_results.assert_results(
+                expected_output, expected_error, expected_return_code
+            )
+
+
+@pytest.mark.rules
+def test_md022_bad_with_pragmas_blanks_after():
+    """
+    Test to make sure this rule works properly with pragmas.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_file_contents = """
+<!--pyml disable-num-lines 5 md012-->
+
+## Heading 3
+"""
+    with create_temporary_configuration_file(
+        source_file_contents, file_name_suffix=".md"
+    ) as source_path:
+        supplied_configuration = {
+            "plugins": {"md022": {"lines_below": 2, "lines_above": 2}}
+        }
+        with create_temporary_configuration_file(
+            supplied_configuration
+        ) as configuration_file:
+            supplied_arguments = [
+                "-c",
+                configuration_file,
+                "scan",
+                source_path,
+            ]
+
+            expected_return_code = 1
+            expected_output = f"""{source_path}:4:1: MD022: Headings should be surrounded by blank lines. [Expected: 2; Actual: 1; Above] (blanks-around-headings,blanks-around-headers)
+{source_path}:4:1: MD022: Headings should be surrounded by blank lines. [Expected: 2; Actual: 1; Below] (blanks-around-headings,blanks-around-headers)"""
+            expected_error = ""
+
+            # Act
+            execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+            # Assert
+            execute_results.assert_results(
+                expected_output, expected_error, expected_return_code
+            )
+
+
+def test_md022_query_config():
+    config_test = pluginQueryConfigTest(
+        "md022",
+        """
+  ITEM               DESCRIPTION
+
+  Id                 md022
+  Name(s)            blanks-around-headings,blanks-around-headers
+  Short Description  Headings should be surrounded by blank lines.
+  Description Url    https://pymarkdown.readthedocs.io/en/latest/plugins/rule_
+                     md022.md
+
+
+  CONFIGURATION ITEM  TYPE     VALUE
+
+  lines_above         integer  1
+  lines_below         integer  1
+
+""",
+    )
+    execute_query_configuration_test(config_test)

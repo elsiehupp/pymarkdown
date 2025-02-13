@@ -3,13 +3,19 @@ Module for directly using PyMarkdown's scan api.
 """
 
 import os
-from test.utils import assert_if_lists_different
+import tempfile
+from test.utils import (
+    assert_if_lists_different,
+    assert_that_exception_is_raised,
+    write_temporary_configuration,
+)
 
 import pytest
 
 from pymarkdown.api import (
     PyMarkdownApi,
     PyMarkdownApiArgumentException,
+    PyMarkdownApiException,
     PyMarkdownApiNoFilesFoundException,
     PyMarkdownPragmaError,
     PyMarkdownScanFailure,
@@ -24,17 +30,18 @@ def test_api_scan_bad_path_to_scan():
     # Arrange
     source_path = ""
 
-    # Act
-    caught_exception = None
-    try:
-        _ = PyMarkdownApi().scan_path(source_path)
-    except PyMarkdownApiArgumentException as this_exception:
-        caught_exception = this_exception
+    expected_output = "Parameter named 'path_to_scan' cannot be empty."
+
+    # Act & Assert
+    caught_exception = assert_that_exception_is_raised(
+        PyMarkdownApiArgumentException,
+        expected_output,
+        PyMarkdownApi().scan_path,
+        source_path,
+    )
 
     # Assert
-    assert caught_exception, "Should have thrown an exception."
     assert caught_exception.argument_name == "path_to_scan"
-    assert caught_exception.reason == "Parameter named 'path_to_scan' cannot be empty."
 
 
 def test_api_scan_bad_alternate_extensions():
@@ -46,22 +53,19 @@ def test_api_scan_bad_alternate_extensions():
     source_path = "something"
     alternate_extensions = "not-a-valid-extension"
 
-    # Act
-    caught_exception = None
-    try:
-        _ = PyMarkdownApi().scan_path(
-            source_path, alternate_extensions=alternate_extensions
-        )
-    except PyMarkdownApiArgumentException as this_exception:
-        caught_exception = this_exception
+    expected_output = "Parameter named 'alternate_extensions' is not a valid comma-separated list of extensions."
+
+    # Act & Assert
+    caught_exception = assert_that_exception_is_raised(
+        PyMarkdownApiArgumentException,
+        expected_output,
+        PyMarkdownApi().scan_path,
+        source_path,
+        alternate_extensions=alternate_extensions,
+    )
 
     # Assert
-    assert caught_exception, "Should have thrown an exception."
     assert caught_exception.argument_name == "alternate_extensions"
-    assert (
-        caught_exception.reason
-        == "Parameter named 'alternate_extensions' is not a valid comma-separated list of extensions."
-    )
 
 
 def test_api_scan_simple_clean():
@@ -98,16 +102,15 @@ def test_api_scan_for_non_existant_file():
     # Arrange
     source_path = "does-not-exist.md"
 
-    # Act
-    caught_exception = None
-    try:
-        _ = PyMarkdownApi().scan_path(source_path)
-    except PyMarkdownApiNoFilesFoundException as this_exception:
-        caught_exception = this_exception
+    expected_output = f"Provided path '{source_path}' does not exist."
 
-    # Assert
-    assert caught_exception, "Should have thrown an exception."
-    assert caught_exception.reason == f"Provided path '{source_path}' does not exist."
+    # Act & Assert
+    assert_that_exception_is_raised(
+        PyMarkdownApiNoFilesFoundException,
+        expected_output,
+        PyMarkdownApi().scan_path,
+        source_path,
+    )
 
 
 def test_api_scan_for_non_matching_glob():
@@ -122,18 +125,14 @@ def test_api_scan_for_non_matching_glob():
     # Arrange
     source_path = os.path.join("test", "resources", "rules", "md001", "z*.md")
 
-    # Act
-    caught_exception = None
-    try:
-        _ = PyMarkdownApi().scan_path(source_path)
-    except PyMarkdownApiNoFilesFoundException as this_exception:
-        caught_exception = this_exception
+    expected_output = f"Provided glob path '{source_path}' did not match any files."
 
-    # Assert
-    assert caught_exception, "Should have thrown an exception."
-    assert (
-        caught_exception.reason
-        == f"Provided glob path '{source_path}' did not match any files."
+    # Act & Assert
+    assert_that_exception_is_raised(
+        PyMarkdownApiNoFilesFoundException,
+        expected_output,
+        PyMarkdownApi().scan_path,
+        source_path,
     )
 
 
@@ -149,18 +148,14 @@ def test_api_scan_for_non_markdown_file():
     # Arrange
     source_path = os.path.join("test", "resources", "rules", "md001", "z*.md")
 
-    # Act
-    caught_exception = None
-    try:
-        _ = PyMarkdownApi().scan_path(source_path)
-    except PyMarkdownApiNoFilesFoundException as this_exception:
-        caught_exception = this_exception
+    expected_output = f"Provided glob path '{source_path}' did not match any files."
 
-    # Assert
-    assert caught_exception, "Should have thrown an exception."
-    assert (
-        caught_exception.reason
-        == f"Provided glob path '{source_path}' did not match any files."
+    # Act & Assert
+    assert_that_exception_is_raised(
+        PyMarkdownApiNoFilesFoundException,
+        expected_output,
+        PyMarkdownApi().scan_path,
+        source_path,
     )
 
 
@@ -207,7 +202,9 @@ def test_api_scan_recursive_for_directory():
         f"{docs_prefix}advanced_scanning.md",
         f"{docs_prefix}api-usage.md",
         f"{docs_prefix}api.md",
-        f"{extensions_prefix}pragmas.md",
+        f"{docs_prefix}developer.md",
+        f"{extensions_prefix}front-matter.md",
+        f"{docs_prefix}old_README.md",
         f"{docs_prefix}pre-commit.md",
         f"{rules_prefix}rule_md001.md",
         f"{rules_prefix}rule_md002.md",
@@ -223,11 +220,13 @@ def test_api_scan_recursive_for_directory():
         f"{rules_prefix}rule_md031.md",
         f"{rules_prefix}rule_md033.md",
         f"{rules_prefix}rule_md036.md",
+        f"{rules_prefix}rule_md038.md",
         f"{rules_prefix}rule_md041.md",
         f"{rules_prefix}rule_md043.md",
         f"{rules_prefix}rule_md044.md",
         f"{rules_prefix}rule_md046.md",
         f"{rules_prefix}rule_md048.md",
+        f"{rules_prefix}rule_pml100.md",
     ]
 
     # Act
@@ -244,7 +243,7 @@ def test_api_scan_recursive_for_directory():
     for i in scan_result.scan_failures:
         itemized_scan_failures = itemized_scan_failures + "\n" + str(i)
     print(itemized_scan_failures)
-    assert len(scan_result.scan_failures) == 53
+    assert len(scan_result.scan_failures) == 124
 
     scan_failures = []
     for i in scan_result.scan_failures:
@@ -277,7 +276,8 @@ def test_api_scan_with_multiple_scan_issues():
 
     # Assert
     assert scan_result
-    assert len(scan_result.scan_failures) == 5
+    assert len(scan_result.scan_failures) == 6
+    print(scan_result.scan_failures)
     assert scan_result.scan_failures[0].partial_equals(
         PyMarkdownScanFailure(source_path, 1, 1, "MD022", "", "", None)
     )
@@ -285,12 +285,15 @@ def test_api_scan_with_multiple_scan_issues():
         PyMarkdownScanFailure(source_path, 1, 12, "MD010", "", "", None)
     )
     assert scan_result.scan_failures[2].partial_equals(
-        PyMarkdownScanFailure(source_path, 2, 2, "MD022", "", "", None)
+        PyMarkdownScanFailure(source_path, 2, 2, "MD021", "", "", None)
     )
     assert scan_result.scan_failures[3].partial_equals(
-        PyMarkdownScanFailure(source_path, 2, 2, "MD023", "", "", None)
+        PyMarkdownScanFailure(source_path, 2, 2, "MD022", "", "", None)
     )
     assert scan_result.scan_failures[4].partial_equals(
+        PyMarkdownScanFailure(source_path, 2, 2, "MD023", "", "", None)
+    )
+    assert scan_result.scan_failures[5].partial_equals(
         PyMarkdownScanFailure(source_path, 2, 14, "MD010", "", "", None)
     )
 
@@ -442,6 +445,250 @@ this is a very long line
     assert not scan_result.pragma_errors
 
 
+def test_api_fix_string_simple_clean():
+    """
+    Test to make sure that we can invoke a fix of a file with no issues.
+    """
+
+    # Arrange
+    string_to_scan = """# This is a test
+
+The line after this line should be blank.
+"""
+
+    # Act
+    scan_result = PyMarkdownApi().fix_string(string_to_scan)
+
+    # Assert
+    assert not scan_result.was_fixed
+    assert string_to_scan == scan_result.fixed_file
+
+
+def test_api_fix_string_simple_small_fix():
+    """
+    Test to make sure that we can invoke a fix of a file with a simple fix.
+    """
+
+    # Arrange
+    string_to_scan = """# This is a test
+
+The line after this line should be blank."""
+    expected_string = """# This is a test
+
+The line after this line should be blank.
+"""
+
+    # Act
+    scan_result = PyMarkdownApi().fix_string(string_to_scan)
+
+    # Assert
+    assert scan_result.was_fixed
+    assert expected_string == scan_result.fixed_file
+
+
+def test_api_fix_path_no_files():
+    """
+    Test to make sure that we can invoke a fix of files on a path, where none are found.
+    """
+
+    # Arrange
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+
+        # Act
+        scan_result = PyMarkdownApi().fix_path(tmp_dir_path)
+
+        # Assert
+        assert not scan_result.files_fixed
+
+
+def test_api_fix_path_single_file_no_fix_required():
+    """
+    Test to make sure that we can invoke a fix of files on a path, where a single file is found requiring no fixes.
+    """
+
+    # Arrange
+    string_to_scan = """# This is a test
+
+The line after this line should be blank.
+"""
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        write_temporary_configuration(
+            string_to_scan, directory=tmp_dir_path, file_name_suffix=".md"
+        )
+
+        # Act
+        scan_result = PyMarkdownApi().fix_path(tmp_dir_path)
+
+        # Assert
+        assert not scan_result.files_fixed
+
+
+def test_api_fix_path_single_file_fix_required():
+    """
+    Test to make sure that we can invoke a fix of files on a path, where a single file is found requiring fixes.
+    """
+
+    # Arrange
+    string_to_scan = """# This is a test
+
+The line after this line should be blank."""
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        file_name = write_temporary_configuration(
+            string_to_scan, directory=tmp_dir_path, file_name_suffix=".md"
+        )
+
+        # Act
+        scan_result = PyMarkdownApi().fix_path(tmp_dir_path)
+
+        # Assert
+        assert scan_result.files_fixed
+        assert file_name in scan_result.files_fixed
+
+
+def test_api_fix_path_single_file_fix_required_with_error():
+    """
+    Test to make sure that we can invoke a fix of files on a path, where a single file is found requiring fixes,
+    but an exception is thrown during processing.
+    """
+
+    # Arrange
+    string_to_scan = """---
+test: assert
+---
+"""
+    expected_error_message = "Unexpected Error(BadTokenizationError): An unhandled error occurred processing the document."
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        write_temporary_configuration(
+            string_to_scan, directory=tmp_dir_path, file_name_suffix=".md"
+        )
+
+        # Act & Assert
+        assert_that_exception_is_raised(
+            PyMarkdownApiException,
+            expected_error_message,
+            PyMarkdownApi()
+            .set_boolean_property("extensions.front-matter.enabled", True)
+            .fix_path,
+            tmp_dir_path,
+        )
+
+
+def test_api_fix_path_single_file_fix_required_with_alternate_extension():
+    """
+    Test to make sure that we can invoke a fix of files on a path, where a single file is found requiring fixes,
+    but with a non-standard extension.
+    """
+
+    # Arrange
+    string_to_scan = """# This is a test
+
+The line after this line should be blank."""
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        file_name = write_temporary_configuration(
+            string_to_scan, directory=tmp_dir_path, file_name_suffix=".nse"
+        )
+
+        # Act
+        scan_result = PyMarkdownApi().fix_path(
+            tmp_dir_path, alternate_extensions=".nse"
+        )
+
+        # Assert
+        assert scan_result.files_fixed
+        assert file_name in scan_result.files_fixed
+
+
+def test_api_fix_path_multiple_files_same_directory_fix_required():
+    """
+    Test to make sure that we can invoke a fix of files on a path, where multiple files are found requiring fixes.
+    """
+
+    # Arrange
+    string_to_scan = """# This is a test
+
+The line after this line should be blank."""
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        file_name_one = write_temporary_configuration(
+            string_to_scan, directory=tmp_dir_path, file_name_suffix=".md"
+        )
+        file_name_two = write_temporary_configuration(
+            string_to_scan, directory=tmp_dir_path, file_name_suffix=".md"
+        )
+
+        # Act
+        scan_result = PyMarkdownApi().fix_path(tmp_dir_path)
+
+        # Assert
+        assert scan_result.files_fixed
+        assert file_name_one in scan_result.files_fixed
+        assert file_name_two in scan_result.files_fixed
+
+
+def test_api_fix_path_multiple_files_nested_directory_fix_required_no_recursion():
+    """
+    Test to make sure that we can invoke a fix of files on a path, where multiple files in nested
+    directories exist requiring fixes, but only the base directory is specified.
+    """
+
+    # Arrange
+    string_to_scan = """# This is a test
+
+The line after this line should be blank."""
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        file_name_one = write_temporary_configuration(
+            string_to_scan, directory=tmp_dir_path, file_name_suffix=".md"
+        )
+        nested_directory = os.path.join(tmp_dir_path, "inner")
+        os.mkdir(nested_directory)
+        file_name_two = write_temporary_configuration(
+            string_to_scan, directory=nested_directory, file_name_suffix=".md"
+        )
+
+        # Act
+        scan_result = PyMarkdownApi().fix_path(tmp_dir_path)
+
+        # Assert
+        assert scan_result.files_fixed
+        assert file_name_one in scan_result.files_fixed
+        assert file_name_two not in scan_result.files_fixed
+
+
+def test_api_fix_path_multiple_files_nested_directory_fix_required_with_recursion():
+    """
+    Test to make sure that we can invoke a fix of files on a path, where multiple files in nested
+    directories exist requiring fixes, and the base directory is specified with recursion enabled.
+    """
+
+    # Arrange
+    string_to_scan = """# This is a test
+
+The line after this line should be blank."""
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        file_name_one = write_temporary_configuration(
+            string_to_scan, directory=tmp_dir_path, file_name_suffix=".md"
+        )
+        nested_directory = os.path.join(tmp_dir_path, "inner")
+        os.mkdir(nested_directory)
+        file_name_two = write_temporary_configuration(
+            string_to_scan, directory=nested_directory, file_name_suffix=".md"
+        )
+
+        # Act
+        scan_result = PyMarkdownApi().fix_path(tmp_dir_path, recurse_if_directory=True)
+
+        # Assert
+        assert scan_result.files_fixed
+        assert file_name_one in scan_result.files_fixed
+        assert file_name_two in scan_result.files_fixed
+
+
 # change print_system_error to also accept optional exception?
 # OR
 # move format_error into presentation?
@@ -452,4 +699,3 @@ this is a very long line
 
 # print_system_out(
 # - [ ] extension_manager, plugin_manager
-# - [x] normally Rule failures, but those are handled by ApiPresentation

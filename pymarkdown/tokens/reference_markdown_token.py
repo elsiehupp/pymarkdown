@@ -3,7 +3,9 @@ Base class for images and links.
 """
 
 # pylint: disable=too-many-instance-attributes
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
+
+from typing_extensions import override
 
 from pymarkdown.links.link_helper_properties import LinkHelperProperties
 from pymarkdown.tokens.inline_markdown_token import InlineMarkdownToken
@@ -27,6 +29,7 @@ class ReferenceMarkdownToken(InlineMarkdownToken):
         requires_end_token: bool = False,
         can_force_close: bool = True,
     ):
+        self.simple_extra_data = extra_data
         if lhp:
             (
                 self.__label_type,
@@ -84,15 +87,11 @@ class ReferenceMarkdownToken(InlineMarkdownToken):
                 "",
             )
 
-        assert self.__link_uri is not None
-        assert self.__label_type is not None
-        assert self.__pre_link_uri is not None
+        assert self.__link_uri is not None, "This field should be defined."
+        assert self.__label_type is not None, "This field should be defined."
+        assert self.__pre_link_uri is not None, "This field should be defined."
 
-        if token_name == MarkdownToken._token_inline_image:
-            extra_data = f"{extra_data}{MarkdownToken.extra_data_separator}"
-
-        # Purposefully split this way to accommodate the extra data
-        part_1, part_2 = self.__build_extra_data(extra_data, self.__label_type)
+        part_1, part_2 = self.__compose_extra_data_field(token_name)
 
         InlineMarkdownToken.__init__(
             self,
@@ -109,19 +108,27 @@ class ReferenceMarkdownToken(InlineMarkdownToken):
     def __build_extra_data(
         self, extra_data: Optional[str], label_type: str
     ) -> Tuple[str, str]:
-        assert self.__link_title is not None
-        assert self.__link_uri is not None
-        assert extra_data is not None
+        assert self.__link_title is not None, "This field should be defined."
+        assert self.__link_uri is not None, "This field should be defined."
+        assert extra_data is not None, "This field should be defined."
         part_1 = MarkdownToken.extra_data_separator.join(
             [label_type, self.__link_uri, self.__link_title, extra_data]
         )
-        assert self.__inline_title_bounding_character is not None
-        assert self.__before_link_whitespace is not None
-        assert self.__before_title_whitespace is not None
-        assert self.__after_title_whitespace is not None
-        assert self.__pre_link_title is not None
-        assert self.__ex_label is not None
-        assert self.__pre_link_uri is not None
+        assert (
+            self.__inline_title_bounding_character is not None
+        ), "This field should be defined."
+        assert (
+            self.__before_link_whitespace is not None
+        ), "This field should be defined."
+        assert (
+            self.__before_title_whitespace is not None
+        ), "This field should be defined."
+        assert (
+            self.__after_title_whitespace is not None
+        ), "This field should be defined."
+        assert self.__pre_link_title is not None, "This field should be defined."
+        assert self.__ex_label is not None, "This field should be defined."
+        assert self.__pre_link_uri is not None, "This field should be defined."
         part_2 = MarkdownToken.extra_data_separator.join(
             [
                 self.__pre_link_uri,
@@ -142,7 +149,7 @@ class ReferenceMarkdownToken(InlineMarkdownToken):
         """
         Returns the type of label that was used.
         """
-        assert self.__label_type is not None
+        assert self.__label_type is not None, "Label type must be defined."
         return self.__label_type
 
     @property
@@ -150,7 +157,7 @@ class ReferenceMarkdownToken(InlineMarkdownToken):
         """
         Returns the URI for the link itself.
         """
-        assert self.__link_uri is not None
+        assert self.__link_uri is not None, "Link uri must be defined."
         return self.__link_uri
 
     @property
@@ -159,7 +166,7 @@ class ReferenceMarkdownToken(InlineMarkdownToken):
         Returns the active URI for the link, preferring the __pre_link_uri over the __link_uri.
         """
         active_link = self.__pre_link_uri or self.__link_uri
-        assert active_link is not None
+        assert active_link is not None, "Active link must be defined."
         return active_link
 
     @property
@@ -168,6 +175,13 @@ class ReferenceMarkdownToken(InlineMarkdownToken):
         Returns the text associated with the link's title.
         """
         return self.__link_title
+
+    @property
+    def pre_link_title(self) -> Optional[str]:
+        """
+        Returns the text associated with the link's title.
+        """
+        return self.__pre_link_title
 
     @property
     def active_link_title(self) -> Optional[str]:
@@ -224,6 +238,41 @@ class ReferenceMarkdownToken(InlineMarkdownToken):
         Returns the whitespace extracted after the title.
         """
         return self.__after_title_whitespace
+
+    def __compose_extra_data_field(self, token_name: str) -> Tuple[str, str]:
+        """
+        Compose the object's self.extra_data field from the local object's variables.
+        """
+        extra_data = (
+            f"{self.simple_extra_data}{MarkdownToken.extra_data_separator}"
+            if token_name == MarkdownToken._token_inline_image
+            else self.simple_extra_data
+        )
+
+        # Purposefully split this way to accommodate the extra data
+        assert self.__label_type is not None, "Label type must be defined."
+        part_1, part_2 = self.__build_extra_data(extra_data, self.__label_type)
+        self._set_extra_data(f"{part_1}{part_2}")
+        return part_1, part_2
+
+    @override
+    def _modify_token(self, field_name: str, field_value: Union[str, int]) -> bool:
+        if field_name == "text_from_blocks" and isinstance(field_value, str):
+            self.__text_from_blocks = field_value
+            self.__compose_extra_data_field(self.token_name)
+
+            return True
+        if field_name == "link_title" and isinstance(field_value, str):
+            self.__link_title = field_value
+            self.__compose_extra_data_field(self.token_name)
+
+            return True
+        if field_name == "pre_link_title" and isinstance(field_value, str):
+            self.__pre_link_title = field_value
+            self.__compose_extra_data_field(self.token_name)
+
+            return True
+        return False
 
 
 # pylint: enable=too-many-instance-attributes

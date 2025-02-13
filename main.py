@@ -1,7 +1,9 @@
 """
 Module to provide for a simple bootstrap for the project.
 """
-from pymarkdown.main import PyMarkdownLint
+
+import contextlib
+import sys
 
 
 class Main:
@@ -13,7 +15,24 @@ class Main:
         """
         Main entrance point.
         """
-        PyMarkdownLint().main()
+        with contextlib.suppress(KeyboardInterrupt):
+            import cProfile
+            import os
+
+            from pymarkdown.main import PyMarkdownLint
+
+            print(sys.argv)
+
+            performance_run_indicator = (
+                os.getenv("PYMARKDOWNLINT__PERFRUN", "0").strip().lower()
+            )
+            if performance_run_indicator in ("1", "true"):
+                cProfile.run(
+                    "from pymarkdown.main import PyMarkdownLint; PyMarkdownLint().main()",
+                    "p0.prof",
+                )
+            else:
+                PyMarkdownLint().main()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 """
 Extra tests.
 """
+
 from test.utils import act_and_assert
 
 import pytest
@@ -9,7 +10,7 @@ import pytest
 
 
 @pytest.mark.gfm
-def test_nested_three_block_block_ordered():
+def test_nested_three_block_block_ordered_x():
     """
     Verify that a nesting of block quote, block quote, ordered list works
     properly.
@@ -297,7 +298,7 @@ item</li>
 
 
 @pytest.mark.gfm
-def test_nested_three_block_nl_block_nl_ordered_no_bq1():
+def test_nested_three_block_nl_block_nl_ordered_no_bq1_x():
     """
     Verify that a nesting of block quote, block quote, ordered list works
     properly.
@@ -1793,7 +1794,7 @@ item</li>
 
 
 @pytest.mark.gfm
-def test_nested_three_block_skip_nl_block_nl_ordered_no_bq1():
+def test_nested_three_block_skip_nl_block_nl_ordered_no_bq1_x():
     """
     Verify that a nesting of block quote, block quote, ordered list works
     properly.
@@ -3259,7 +3260,7 @@ item</li>
 
 
 @pytest.mark.gfm
-def test_nested_three_block_nl_block_skip_nl_ordered_no_bq1_drop_ordered():
+def test_nested_three_block_nl_block_skip_nl_ordered_no_bq1_drop_ordered_x():
     """
     Verify that a nesting of block quote, block quote, ordered list works
     properly.
@@ -3411,7 +3412,7 @@ item</li>
 
 
 @pytest.mark.gfm
-def test_nested_three_block_nl_block_skip_nl_ordered_no_bq2_drop_ordered():
+def test_nested_three_block_nl_block_skip_nl_ordered_no_bq2_drop_ordered_x():
     """
     Verify that a nesting of block quote, block quote, ordered list works
     properly.
@@ -3910,7 +3911,7 @@ item</li>
 
 
 @pytest.mark.gfm
-def test_nested_three_block_text_nl_block_skip_text_nl_ordered_no_bq1_drop_ordered():
+def test_nested_three_block_text_nl_block_skip_text_nl_ordered_no_bq1_drop_ordered_x():
     """
     Verify that a nesting of block quote, block quote, ordered list works
     properly.
@@ -4119,6 +4120,36 @@ def test_nested_three_block_text_nl_block_skip_text_nl_ordered_no_bq2_drop_order
 <blockquote>
 <p>def</p>
 </blockquote>
+<ol>
+<li>list
+item</li>
+</ol>
+</blockquote>"""
+
+    # Act & Assert
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
+
+
+@pytest.mark.gfm
+def test_nested_three_block_text_nl_block_skip_text_nl_ordered_no_bq2_drop_ordered_zzz():
+    """
+    Verify that a nesting of block quote, block quote, ordered list works
+    properly.
+    """
+
+    # Arrange
+    source_markdown = """>   1. list
+>   item"""
+    expected_tokens = [
+        "[block-quote(1,1)::> \n> ]",
+        "[olist(1,5):.:1:7:  :  ]",
+        "[para(1,8):\n]",
+        "[text(1,8):list\nitem::\n]",
+        "[end-para:::True]",
+        "[end-olist:::True]",
+        "[end-block-quote:::True]",
+    ]
+    expected_gfm = """<blockquote>
 <ol>
 <li>list
 item</li>

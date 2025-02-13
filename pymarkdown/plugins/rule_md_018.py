@@ -3,6 +3,7 @@ Module to implement a plugin that looks for text in a paragraph where a line sta
 with what could be an atx heading, except there is no spaces between the hashes and
 the text of the heading.
 """
+
 import re
 from typing import Any, Optional, Tuple, cast
 
@@ -143,6 +144,7 @@ class StartOfLineTokenParser:
                 token.is_inline_emphasis
                 or token.is_inline_emphasis_end
                 or token.is_inline_autolink
+                or token.is_task_list
             )
         self.__delayed_line = None
 
@@ -270,7 +272,7 @@ class RuleMd018(RulePlugin):
             plugin_description="No space present after the hash character on a possible Atx Heading.",
             plugin_version="0.5.0",
             plugin_interface_version=1,
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md018.md",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md018.md",
         )
 
     def starting_new_file(self) -> None:

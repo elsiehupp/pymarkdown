@@ -1,9 +1,13 @@
 """
 Module to provide for an element that can be added to markdown parsing stream.
 """
+
 from enum import Enum
 from typing import List, Optional, Union
 
+from typing_extensions import override
+
+from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.position_marker import PositionMarker
 from pymarkdown.plugin_manager.bad_plugin_fix_error import BadPluginFixError
 from pymarkdown.plugin_manager.plugin_modify_context import PluginModifyContext
@@ -29,8 +33,17 @@ class MarkdownToken:
     extra_data_separator = ":"
 
     _end_token_prefix = "end-"
+
     _token_pragma = "pragma"
     _token_end_of_stream = "end-of-stream"
+
+    _token_task_list = "task-list"
+    _token_front_matter = "front-matter"
+
+    _token_block_quote = "block-quote"
+    _token_unordered_list_start = "ulist"
+    _token_ordered_list_start = "olist"
+    _token_new_list_item = "li"
 
     _token_paragraph = "para"
     _token_blank_line = "BLANK"
@@ -41,13 +54,7 @@ class MarkdownToken:
     _token_html_block = "html-block"
     _token_fenced_code_block = "fcode-block"
     _token_indented_code_block = "icode-block"
-    _token_block_quote = "block-quote"
     _token_text = "text"
-    _token_front_matter = "front-matter"
-
-    _token_unordered_list_start = "ulist"
-    _token_ordered_list_start = "olist"
-    _token_new_list_item = "li"
 
     _token_inline_code_span = "icode-span"
     _token_inline_hard_break = "hard-break"
@@ -139,13 +146,6 @@ class MarkdownToken:
         Returns whether the current token is a leaf block element.
         """
         return self.__token_class == MarkdownTokenClass.LEAF_BLOCK
-
-    # @property
-    # def is_inline(self) -> bool:
-    #     """
-    #     Returns whether the current token is an inline block element.
-    #     """
-    #     return self.__token_class == MarkdownTokenClass.INLINE_BLOCK
 
     @property
     def extra_data(self) -> Optional[str]:
@@ -383,6 +383,13 @@ class MarkdownToken:
         return self.token_name == MarkdownToken._token_front_matter
 
     @property
+    def is_task_list(self) -> bool:
+        """
+        Returns whether the current token is the task list element.
+        """
+        return self.token_name == MarkdownToken._token_task_list
+
+    @property
     def is_text(self) -> bool:
         """
         Returns whether the current token is a text element.
@@ -586,6 +593,24 @@ class MarkdownToken:
         """
         return self.token_name == MarkdownToken._token_inline_image
 
+    def adjust_line_number(
+        self, context: PluginModifyContext, adjust_delta: int
+    ) -> None:
+        """
+        Adjust the line number by a given amount.
+        """
+        # By design, tokens can only be modified in fix mode during the token pass.
+        if not context.in_fix_mode:
+            raise BadPluginFixError(
+                f"Token '{self.__token_name}' can only be modified in fix mode."
+            )
+        if context.is_during_line_pass:
+            raise BadPluginFixError(
+                f"Token '{self.__token_name}' can only be modified during the token pass in fix mode."
+            )
+        if self.__line_number:
+            self.__line_number += adjust_delta
+
     def modify_token(
         self,
         context: PluginModifyContext,
@@ -608,7 +633,9 @@ class MarkdownToken:
         return self._modify_token(field_name, field_value)
 
     def _modify_token(self, field_name: str, field_value: Union[str, int]) -> bool:
-        _ = field_name, field_value
+        if field_name == "column_number" and isinstance(field_value, int):
+            self.__column_number = field_value
+            return True
         return False
 
     def generate_close_markdown_token_from_markdown_token(
@@ -631,6 +658,31 @@ class MarkdownToken:
             column_number=column_number,
         )
 
+    @staticmethod
+    def assert_tokens_are_same_except_for_line_number(
+        token1: "MarkdownToken", token2: "MarkdownToken"
+    ) -> None:
+        """This assert function is needed as fixes to existing markdown tokens that
+        have a open/close pairing may result in the open token being replaced with
+        a new token that only differs by line number.
+        """
+
+        if str(token1) != str(token2):
+
+            token1_visible = ParserHelper.make_value_visible(token1)
+            token1_visible_first_index = token1_visible.index("(")
+            token1_visible_second_index = token1_visible.index(
+                ",", token1_visible_first_index
+            )
+            last_part = token1_visible[token1_visible_second_index:]
+            first_part = token1_visible[: token1_visible_first_index + 1]
+            fixed_token_text = f"{first_part}{token2.line_number}{last_part}"
+            token2_visible = ParserHelper.make_value_visible(token2)
+
+            assert (
+                fixed_token_text == token2_visible
+            ), f"{ParserHelper.make_value_visible(token1)}=={ParserHelper.make_value_visible(token2)}"
+
 
 # pylint: enable=too-many-public-methods,too-many-instance-attributes
 
@@ -651,7 +703,6 @@ class EndMarkdownToken(MarkdownToken):
         line_number: int = 0,
         column_number: int = 0,
     ) -> None:
-        assert start_markdown_token
         if isinstance(start_markdown_token, MarkdownToken):
             assert (
                 start_markdown_token.requires_end_token
@@ -744,3 +795,15 @@ class EndMarkdownToken(MarkdownToken):
             field_parts.append(str(self.was_forced))
 
         self._set_extra_data(MarkdownToken.extra_data_separator.join(field_parts))
+
+    @override
+    def _modify_token(self, field_name: str, field_value: Union[str, int]) -> bool:
+        if field_name == "extracted_whitespace" and isinstance(field_value, str):
+            self.__extracted_whitespace = field_value
+            self.__compose_data_field()
+            return True
+        if field_name == "extra_end_data" and isinstance(field_value, str):
+            self.__extra_end_data = field_value
+            self.__compose_data_field()
+            return True
+        return False

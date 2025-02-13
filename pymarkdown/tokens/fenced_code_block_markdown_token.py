@@ -3,7 +3,9 @@ Module to provide for an encapsulation of the fenced code block element.
 """
 
 import logging
-from typing import Optional, cast
+from typing import Optional, Union, cast
+
+from typing_extensions import override
 
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.parser_logger import ParserLogger
@@ -201,9 +203,13 @@ class FencedCodeBlockMarkdownToken(LeafMarkdownToken):
         current_end_token = cast(EndMarkdownToken, current_token)
         if not current_end_token.was_forced:
             # We need to do this as the ending fence may be longer than the opening fence.
-            assert current_token.extra_data is not None
+            assert (
+                current_token.extra_data is not None
+            ), "extra_data must be defined by this point"
             split_extra_data = current_token.extra_data.split(":")
-            assert len(split_extra_data) >= 3
+            assert (
+                len(split_extra_data) >= 3
+            ), "Extra data must split into at least 3 parts."
             extra_end_space = split_extra_data[1]
             fence_count = int(split_extra_data[2])
 
@@ -212,12 +218,15 @@ class FencedCodeBlockMarkdownToken(LeafMarkdownToken):
             )
 
             fence_parts = [
-                ""
-                if previous_token is not None
-                and (
-                    previous_token.is_blank_line or previous_token.is_fenced_code_block
-                )
-                else ParserHelper.newline_character,
+                (
+                    ""
+                    if previous_token is not None
+                    and (
+                        previous_token.is_blank_line
+                        or previous_token.is_fenced_code_block
+                    )
+                    else ParserHelper.newline_character
+                ),
                 current_end_token.extracted_whitespace,
                 ParserHelper.repeat_string(
                     current_start_token.fence_character, fence_count
@@ -228,7 +237,9 @@ class FencedCodeBlockMarkdownToken(LeafMarkdownToken):
 
             return "".join(fence_parts)
 
-        assert previous_token is not None
+        assert (
+            previous_token is not None
+        ), "Previous token must be defined if processing the end of a fenced block."
         is_previous_code_block = previous_token.is_fenced_code_block
         return (
             ParserHelper.newline_character
@@ -281,7 +292,6 @@ class FencedCodeBlockMarkdownToken(LeafMarkdownToken):
         next_token: MarkdownToken,
         transform_state: TransformState,
     ) -> str:
-        end_token = cast(EndMarkdownToken, next_token)
         fenced_token_index = transform_state.actual_token_index - 1
         while not transform_state.actual_tokens[
             fenced_token_index
@@ -324,6 +334,7 @@ class FencedCodeBlockMarkdownToken(LeafMarkdownToken):
         ):
             POGGER.debug("#2:$", transform_state.last_token)
             text_token = cast(TextMarkdownToken, transform_state.last_token)
+            end_token = cast(EndMarkdownToken, next_token)
             if not (end_token.was_forced and text_token.token_text.endswith("\n\x03")):
                 token_parts.append(ParserHelper.newline_character)
         transform_state.is_in_code_block, transform_state.is_in_fenced_code_block = (
@@ -332,3 +343,15 @@ class FencedCodeBlockMarkdownToken(LeafMarkdownToken):
         )
         token_parts.extend(["</code></pre>", ParserHelper.newline_character])
         return "".join(token_parts)
+
+    @override
+    def _modify_token(self, field_name: str, field_value: Union[str, int]) -> bool:
+        if (
+            field_name == "fence_character"
+            and isinstance(field_value, str)
+            and field_value in ["~", "`"]
+        ):
+            self.__fence_character = field_value
+            self.__compose_extra_data_field()
+            return True
+        return super()._modify_token(field_name, field_value)

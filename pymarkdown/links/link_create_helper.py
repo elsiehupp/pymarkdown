@@ -1,11 +1,15 @@
 """
 Module to provide for the creation of a new link.
 """
+
 import logging
 from typing import List, Optional, Tuple, cast
 
 from typing_extensions import Protocol
 
+from pymarkdown.container_blocks.parse_block_pass_properties import (
+    ParseBlockPassProperties,
+)
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.parser_logger import ParserLogger
 from pymarkdown.inline.inline_helper import InlineHelper
@@ -31,9 +35,9 @@ class ProcessSimpleInlineProtocol(Protocol):
 
     def __call__(
         self,
+        parser_properties: ParseBlockPassProperties,
         source_text: str,
-    ) -> str:
-        ...  # pragma: no cover
+    ) -> str: ...  # pragma: no cover
 
 
 # pylint: enable=too-few-public-methods
@@ -51,6 +55,7 @@ class LinkCreateHelper:
     # pylint: disable=too-many-arguments
     @staticmethod
     def create_link_token(
+        parser_properties: ParseBlockPassProperties,
         start_text: str,
         text_from_blocks: str,
         text_from_blocks_raw: str,
@@ -110,6 +115,7 @@ class LinkCreateHelper:
                 consume_rest_of_line,
                 text_from_blocks_raw,
             ) = LinkCreateHelper.__add_image_token(
+                parser_properties,
                 start_text,
                 inline_blocks,
                 ind,
@@ -147,6 +153,7 @@ class LinkCreateHelper:
     # pylint: disable=too-many-arguments
     @staticmethod
     def __add_image_token(
+        parser_properties: ParseBlockPassProperties,
         start_text: str,
         inline_blocks: List[MarkdownToken],
         ind: int,
@@ -158,7 +165,9 @@ class LinkCreateHelper:
         current_string_unresolved: str,
         lhp: LinkHelperProperties,
     ) -> Tuple[bool, str]:
-        assert start_text == LinkCreateHelper.image_start_sequence
+        assert (
+            start_text == LinkCreateHelper.image_start_sequence
+        ), "This should be the image start sequence."
         POGGER.debug("\n>>__consume_text_for_image_alt_text>>$>>", inline_blocks)
         POGGER.debug("\n>>__consume_text_for_image_alt_text>>$>>", ind)
         POGGER.debug("\n>>__consume_text_for_image_alt_text>>$>>", remaining_line)
@@ -166,7 +175,12 @@ class LinkCreateHelper:
             image_alt_text,
             text_from_blocks_raw,
         ) = LinkCreateHelper.__consume_text_for_image_alt_text(
-            inline_blocks, ind, remaining_line, text_from_blocks_raw, process_inlines_fn
+            parser_properties,
+            inline_blocks,
+            ind,
+            remaining_line,
+            text_from_blocks_raw,
+            process_inlines_fn,
         )
         POGGER.debug("\n>>__consume_text_for_image_alt_text>>$>>", image_alt_text)
 
@@ -185,8 +199,10 @@ class LinkCreateHelper:
 
     # pylint: enable=too-many-arguments
 
+    # pylint: disable=too-many-arguments
     @staticmethod
     def __consume_text_for_image_alt_text(
+        parser_properties: ParseBlockPassProperties,
         inline_blocks: List[MarkdownToken],
         ind: int,
         remaining_line: str,
@@ -218,7 +234,7 @@ class LinkCreateHelper:
             POGGER.debug(">>after>>$>>", image_alt_text)
         else:
             POGGER.debug(">>composing>>$>>", text_from_blocks_raw)
-            image_alt_text = process_inlines_fn(text_from_blocks_raw)
+            image_alt_text = process_inlines_fn(parser_properties, text_from_blocks_raw)
             image_alt_text = ParserHelper.resolve_all_from_text(image_alt_text)
             image_alt_text = InlineHelper.append_text(
                 "", image_alt_text, add_text_signature=False
@@ -228,6 +244,8 @@ class LinkCreateHelper:
         POGGER.debug(">>image_alt_text>>$>>", image_alt_text)
         POGGER.debug(">>text_from_blocks_raw>>$>>", text_from_blocks_raw)
         return image_alt_text, text_from_blocks_raw
+
+    # pylint: enable=too-many-arguments
 
     @staticmethod
     def __handle_next_alt_text_special_text(
@@ -280,9 +298,7 @@ class LinkCreateHelper:
     def __handle_next_alt_text_else(
         next_token: MarkdownToken, alt_text_parts: List[str]
     ) -> None:
-        assert (
-            next_token.is_inline_image
-        ), f"Not handled: {ParserHelper.make_value_visible(next_token)}"
+        assert next_token.is_inline_image, "This should be an inline image token."
         image_token = cast(ImageStartMarkdownToken, next_token)
         alt_text_parts.append(image_token.image_alt_text)
 

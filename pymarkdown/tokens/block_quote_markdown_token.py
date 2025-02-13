@@ -3,7 +3,9 @@ Module to provide for an encapsulation of the block quote element.
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple, Union
+
+from typing_extensions import override
 
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.parser_logger import ParserLogger
@@ -19,6 +21,8 @@ from pymarkdown.transform_markdown.markdown_transform_context import (
 )
 
 POGGER = ParserLogger(logging.getLogger(__name__))
+
+# pylint: disable=too-many-instance-attributes
 
 
 class BlockQuoteMarkdownToken(ContainerMarkdownToken):
@@ -42,6 +46,13 @@ class BlockQuoteMarkdownToken(ContainerMarkdownToken):
             position_marker=position_marker,
         )
         self.__compose_extra_data_field()
+        self.weird_kludge_one: Optional[int] = None
+        self.weird_kludge_two: Optional[int] = None
+        self.weird_kludge_three: bool = False
+        self.weird_kludge_four: Optional[Tuple[int, int, int, str]] = None
+        self.weird_kludge_five = False
+        self.weird_kludge_six = False
+        self.weird_kludge_seven = False
 
     # pylint: disable=protected-access
     @staticmethod
@@ -88,14 +99,16 @@ class BlockQuoteMarkdownToken(ContainerMarkdownToken):
             self.__leading_spaces,
         )
         POGGER.debug("add_leading_spaces>>:$:<<", leading_spaces_to_add)
-        if skip_adding_newline:
-            self.__leading_spaces = f"{self.__leading_spaces}{leading_spaces_to_add}"
-        else:
-            self.__leading_spaces = (
+        self.__leading_spaces = (
+            f"{self.__leading_spaces}{leading_spaces_to_add}"
+            if skip_adding_newline
+            else (
                 f"{self.__leading_spaces}{ParserHelper.newline_character}{leading_spaces_to_add}"
                 if self.__leading_spaces
                 else leading_spaces_to_add
             )
+        )
+        self.weird_kludge_five = True
         POGGER.debug(
             "__leading_spaces>>:$:<<",
             self.__leading_spaces,
@@ -121,8 +134,9 @@ class BlockQuoteMarkdownToken(ContainerMarkdownToken):
         if last_separator_index == -1:
             extracted_text = self.__leading_spaces
             self.__leading_spaces = ""
+            self.weird_kludge_five = False
         else:
-            extracted_text = self.__leading_spaces[last_separator_index:]
+            extracted_text = self.__leading_spaces[last_separator_index + 1 :]
             self.__leading_spaces = self.__leading_spaces[:last_separator_index]
         self.leading_text_index -= 1
         self.__compose_extra_data_field()
@@ -148,7 +162,9 @@ class BlockQuoteMarkdownToken(ContainerMarkdownToken):
         Calculate the next leading space based on the leading_text_index,
         optonally incrementing it as well.
         """
-        assert self.bleading_spaces is not None
+        assert (
+            self.bleading_spaces is not None
+        ), "Bleading spaces must be defined by now."
 
         # print(f"increment_index>>:{increment_index}:<<")
         tabbed_leading = None
@@ -160,12 +176,13 @@ class BlockQuoteMarkdownToken(ContainerMarkdownToken):
             ParserHelper.newline_character
         )
         absolute_index = self.leading_text_index + delta
-        if allow_overflow and absolute_index >= len(split_leading_spaces):
-            leading_text = ""
-        else:
-            leading_text = split_leading_spaces[self.leading_text_index + delta]
-            if increment_index:
-                self.leading_text_index += 1
+        assert not (allow_overflow and absolute_index >= len(split_leading_spaces))
+        # if allow_overflow and absolute_index >= len(split_leading_spaces):
+        #     leading_text = ""
+        # else:
+        leading_text = split_leading_spaces[self.leading_text_index + delta]
+        if increment_index:
+            self.leading_text_index += 1
 
         if tabbed_leading is not None:
             leading_text = tabbed_leading
@@ -219,3 +236,14 @@ class BlockQuoteMarkdownToken(ContainerMarkdownToken):
         )
         token_parts.extend(["</blockquote>", ParserHelper.newline_character])
         return "".join(token_parts)
+
+    @override
+    def _modify_token(self, field_name: str, field_value: Union[str, int]) -> bool:
+        if field_name == "bleading_spaces" and isinstance(field_value, str):
+            self.__leading_spaces = field_value
+            self.__compose_extra_data_field()
+            return True
+        return super()._modify_token(field_name, field_value)
+
+
+# pylint: enable=too-many-instance-attributes

@@ -1,6 +1,7 @@
 """
 https://github.github.com/gfm/#emphasis-and-strong-emphasis
 """
+
 from test.utils import act_and_assert
 
 import pytest
@@ -14,13 +15,7 @@ def test_emphasis_400():
 
     # Arrange
     source_markdown = """**foo bar **"""
-    expected_tokens = [
-        "[para(1,1):]",
-        "[text(1,1):**:]",
-        "[text(1,3):foo bar :]",
-        "[text(1,11):**:]",
-        "[end-para:::True]",
-    ]
+    expected_tokens = ["[para(1,1):]", "[text(1,1):**foo bar **:]", "[end-para:::True]"]
     expected_gfm = """<p>**foo bar **</p>"""
 
     # Act & Assert
@@ -35,14 +30,7 @@ def test_emphasis_401():
 
     # Arrange
     source_markdown = """**(**foo)"""
-    expected_tokens = [
-        "[para(1,1):]",
-        "[text(1,1):**:]",
-        "[text(1,3):(:]",
-        "[text(1,4):**:]",
-        "[text(1,6):foo):]",
-        "[end-para:::True]",
-    ]
+    expected_tokens = ["[para(1,1):]", "[text(1,1):**(**foo):]", "[end-para:::True]"]
     expected_gfm = """<p>**(**foo)</p>"""
 
     # Act & Assert

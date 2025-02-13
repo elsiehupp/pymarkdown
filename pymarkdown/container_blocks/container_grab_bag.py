@@ -1,6 +1,7 @@
 """
 Class to provide a "grab bag" for commonly used properties for the Container Block Processor.
 """
+
 import logging
 from typing import Any, List, Optional, Tuple
 
@@ -46,8 +47,7 @@ class ParseForContainerBlocksProtocol(Protocol):
         Optional[RequeueLineInfo],
         bool,
         bool,
-    ]:
-        ...  # pragma: no cover
+    ]: ...  # pragma: no cover
 
     # pylint: enable=too-many-arguments
 
@@ -718,7 +718,7 @@ class ContainerGrabBag:
         """
         xxx
         """
-        return len(self.__leaf_tokens) == 0
+        return not self.__leaf_tokens
 
     def extend_leaf_tokens(self, tokens_to_append: List[MarkdownToken]) -> None:
         """
@@ -758,6 +758,13 @@ class ContainerGrabBag:
         Xxx
         """
         return self.__container_level_tokens
+
+    @property
+    def leaf_tokens(self) -> List[MarkdownToken]:
+        """
+        Xxx
+        """
+        return self.__leaf_tokens
 
 
 # pylint: enable=too-many-public-methods

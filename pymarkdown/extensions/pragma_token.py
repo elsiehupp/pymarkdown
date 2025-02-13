@@ -1,8 +1,9 @@
 """
 Module to provide for linter instructions that can be embedded within the document.
 """
+
 import logging
-from typing import Dict, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 from application_properties import ApplicationPropertiesFacade
 from typing_extensions import Protocol
@@ -15,6 +16,7 @@ from pymarkdown.extension_manager.extension_manager_constants import (
     ExtensionManagerConstants,
 )
 from pymarkdown.extension_manager.parser_extension import ParserExtension
+from pymarkdown.general.constants import Constants
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.parser_logger import ParserLogger
 from pymarkdown.general.position_marker import PositionMarker
@@ -35,8 +37,9 @@ class LogPragmaFailureProtocol(Protocol):
     Protocol to specify a function that allows failures to be reported.
     """
 
-    def __call__(self, scan_file: str, line_number: int, pragma_error: str) -> None:
-        ...  # pragma: no cover
+    def __call__(
+        self, scan_file: str, line_number: int, pragma_error: str
+    ) -> None: ...  # pragma: no cover
 
 
 # pylint: enable=too-few-public-methods
@@ -64,7 +67,7 @@ class PragmaExtension(ParserExtension):
             extension_enabled_by_default=True,
             extension_version="0.5.0",
             extension_interface_version=ExtensionManagerConstants.EXTENSION_INTERFACE_VERSION_BASIC,
-            extension_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/extensions/pragmas.md",
+            extension_url="https://pymarkdown.readthedocs.io/en/latest/extensions/pragmas/",
             extension_configuration=None,
         )
 
@@ -110,7 +113,9 @@ class PragmaExtension(ParserExtension):
                     else PragmaToken.pragma_prefix
                 ),
             )
-            remaining_line = line_to_parse[start_index:].rstrip().lower()
+            remaining_line = (
+                line_to_parse[start_index:].rstrip(Constants.ascii_whitespace).lower()
+            )
             if remaining_line.startswith(
                 PragmaToken.pragma_title
             ) and remaining_line.endswith(PragmaToken.pragma_suffix):
@@ -133,6 +138,7 @@ class PragmaExtension(ParserExtension):
         pragma_lines: Dict[int, str],
         all_ids: Dict[str, FoundPlugin],
         document_pragmas: Dict[int, Set[str]],
+        document_pragma_ranges: List[Tuple[int, int, Set[str]]],
         log_pragma_failure: LogPragmaFailureProtocol,
     ) -> None:
         """
@@ -145,18 +151,19 @@ class PragmaExtension(ParserExtension):
             prefix_length = len(PragmaToken.pragma_alternate_prefix)
             actual_line_number = -next_line_number
 
-        line_after_prefix = pragma_lines[next_line_number][prefix_length:].rstrip()
-        after_whitespace_index, _ = ParserHelper.extract_spaces(line_after_prefix, 0)
-        assert after_whitespace_index is not None
+        line_after_prefix = pragma_lines[next_line_number][prefix_length:]
+        after_whitespace_index, _ = ParserHelper.extract_spaces_verified(
+            line_after_prefix, 0
+        )
+        after_whitespace_index, _ = ParserHelper.extract_spaces_verified(
+            line_after_prefix, after_whitespace_index + len(PragmaToken.pragma_title)
+        )
         command_data = line_after_prefix[
-            after_whitespace_index
-            + len(PragmaToken.pragma_title) : -len(PragmaToken.pragma_suffix)
+            after_whitespace_index : -len(PragmaToken.pragma_suffix)
         ]
-        after_command_index, command = ParserHelper.extract_until_spaces(
+        after_command_index, command = ParserHelper.extract_until_spaces_verified(
             command_data, 0
         )
-        assert command is not None
-        assert after_command_index is not None
         command = command.lower()
         if not command:
             log_pragma_failure(
@@ -172,6 +179,17 @@ class PragmaExtension(ParserExtension):
                 scan_file,
                 actual_line_number,
                 document_pragmas,
+                all_ids,
+                command,
+            )
+        elif command == "disable-num-lines":
+            PragmaExtension.__handle_disable_num_lines(
+                command_data,
+                after_command_index,
+                log_pragma_failure,
+                scan_file,
+                actual_line_number,
+                document_pragma_ranges,
                 all_ids,
                 command,
             )
@@ -199,7 +217,7 @@ class PragmaExtension(ParserExtension):
         ids_to_disable = command_data[after_command_index:].split(",")
         processed_ids = set()
         for next_id in ids_to_disable:
-            next_id = next_id.strip().lower()
+            next_id = next_id.strip(" ").lower()
             if not next_id:
                 log_pragma_failure(
                     scan_file,
@@ -220,6 +238,114 @@ class PragmaExtension(ParserExtension):
             document_pragmas[actual_line_number + 1] = processed_ids
 
     # pylint: enable=too-many-arguments
+    # pylint: disable=too-many-arguments
+
+    @staticmethod
+    def __handle_disable_num_lines_parse(
+        command_data: str,
+        after_command_index: int,
+        log_pragma_failure: LogPragmaFailureProtocol,
+        scan_file: str,
+        actual_line_number: int,
+        command: str,
+    ) -> Tuple[bool, int, Optional[int]]:
+        after_space_index, _ = ParserHelper.extract_spaces_verified(
+            command_data, after_command_index
+        )
+        if after_space_index == len(command_data):
+            log_pragma_failure(
+                scan_file,
+                actual_line_number,
+                f"Inline configuration command '{command}' was not followed by a count and a list of plugin ids to temporarily disable.",
+            )
+            return False, -1, None
+        after_num_index, extracted_number = ParserHelper.extract_until_spaces_verified(
+            command_data, after_space_index
+        )
+
+        try:
+            count_value = int(extracted_number)
+        except ValueError:
+            count_value = -1
+        if count_value < 1:
+            log_pragma_failure(
+                scan_file,
+                actual_line_number,
+                f"Inline configuration command '{command}' specified a count '{extracted_number}' that is not a valid positive integer.",
+            )
+            return False, -1, None
+
+        after_number_index, _ = ParserHelper.extract_spaces_verified(
+            command_data, after_num_index
+        )
+        if after_number_index == len(command_data):
+            log_pragma_failure(
+                scan_file,
+                actual_line_number,
+                f"Inline configuration command '{command}' and its count were not followed by a list of plugin ids to temporarily disable.",
+            )
+            return False, -1, None
+        return True, after_number_index, count_value
+
+    # pylint: enable=too-many-arguments
+
+    # pylint: disable=too-many-arguments, too-many-locals
+    @staticmethod
+    def __handle_disable_num_lines(
+        command_data: str,
+        after_command_index: int,
+        log_pragma_failure: LogPragmaFailureProtocol,
+        scan_file: str,
+        actual_line_number: int,
+        document_pragma_ranges: List[Tuple[int, int, Set[str]]],
+        all_ids: Dict[str, FoundPlugin],
+        command: str,
+    ) -> None:
+        (
+            is_ok,
+            after_number_index,
+            count_value,
+        ) = PragmaExtension.__handle_disable_num_lines_parse(
+            command_data,
+            after_command_index,
+            log_pragma_failure,
+            scan_file,
+            actual_line_number,
+            command,
+        )
+        if not is_ok:
+            return
+
+        ids_to_disable = command_data[after_number_index:].split(",")
+        processed_ids = set()
+        for next_id in ids_to_disable:
+            next_id = next_id.strip(" ").lower()
+            if not next_id:
+                log_pragma_failure(
+                    scan_file,
+                    actual_line_number,
+                    f"Inline configuration command '{command}' specified a plugin with a blank id.",
+                )
+            elif next_id in all_ids:
+                normalized_id = all_ids[next_id].plugin_id
+                processed_ids.add(normalized_id)
+            else:
+                log_pragma_failure(
+                    scan_file,
+                    actual_line_number,
+                    f"Inline configuration command '{command}' unable to find a plugin with the id '{next_id}'.",
+                )
+
+        if processed_ids:
+            assert count_value is not None
+            pragma_tuple = (
+                actual_line_number + 1,
+                actual_line_number + count_value,
+                processed_ids,
+            )
+            document_pragma_ranges.append(pragma_tuple)
+
+    # pylint: enable=too-many-arguments, too-many-locals
 
 
 class PragmaToken(MarkdownToken):
@@ -235,18 +361,24 @@ class PragmaToken(MarkdownToken):
     def __init__(self, pragma_lines: Dict[int, str]) -> None:
         self.__pragma_lines = pragma_lines
 
-        serialized_pragmas = "".join(
-            f";{next_line_number}:{pragma_lines[next_line_number]}"
-            for next_line_number in pragma_lines
-        )
-
         MarkdownToken.__init__(
             self,
             MarkdownToken._token_pragma,
             MarkdownTokenClass.SPECIAL,
             is_extension=True,
-            extra_data=serialized_pragmas[1:],
+            extra_data="",
         )
+        self.__compose_extra_data_field()
+
+    def __compose_extra_data_field(self) -> None:
+        """
+        Compose the object's self.extra_data field from the local object's variables.
+        """
+        serialized_pragmas = "".join(
+            f";{next_line_number}:{self.__pragma_lines[next_line_number]}"
+            for next_line_number in self.__pragma_lines
+        )
+        self._set_extra_data(serialized_pragmas[1:])
 
     @staticmethod
     def get_markdown_token_type() -> str:
@@ -261,6 +393,15 @@ class PragmaToken(MarkdownToken):
         Returns the pragma lines for the document.
         """
         return self.__pragma_lines
+
+    def adjust_pragma_line_number(
+        self, initial_line_number: int, new_line_number: int
+    ) -> None:
+        """Perform an adjustment to the line number of a given pragma."""
+        old_pragma = self.__pragma_lines[initial_line_number]
+        del self.__pragma_lines[initial_line_number]
+        self.__pragma_lines[new_line_number] = old_pragma
+        self.__compose_extra_data_field()
 
     def register_for_markdown_transform(
         self,

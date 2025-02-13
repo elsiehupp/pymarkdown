@@ -2,7 +2,6 @@
 Module to provide for an encapsulation of a plugin that was discovered.
 """
 
-
 # pylint: disable=too-many-instance-attributes
 from dataclasses import dataclass
 from typing import List, Optional
@@ -29,6 +28,7 @@ class FoundPlugin:
     plugin_url: Optional[str]
     plugin_configuration: Optional[str]
     plugin_supports_fix: bool
+    plugin_fix_level: int
     plugin_identifiers: List[str]
 
 

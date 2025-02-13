@@ -27,12 +27,12 @@ AUTHOR = "Jack De Winter"
 AUTHOR_EMAIL = "jack.de.winter@outlook.com"
 PROJECT_URL = "https://github.com/jackdewinter/pymarkdown"
 PROJECT_URLS = {
-    "Change Log": "https://github.com/jackdewinter/pymarkdown/blob/main/changelog.md",
+    "Change Log": "https://pymarkdown.readthedocs.io/en/latest/changelog/",
 }
 
 PACKAGE_NAME = "pymarkdownlnt"
 SEMANTIC_VERSION = get_semantic_version()
-MINIMUM_PYTHON_VERSION = "3.8.0"
+MINIMUM_PYTHON_VERSION = "3.9.0"
 
 ONE_LINE_DESCRIPTION = "A GitHub Flavored Markdown compliant Markdown linter."
 LONG_DESCRIPTION = load_readme_file()
@@ -42,8 +42,11 @@ KEYWORDS = ["markdown", "linter", "markdown linter"]
 PROJECT_CLASSIFIERS = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Natural Language :: English",
@@ -64,6 +67,7 @@ PACKAGE_MODULES = [
     "pymarkdown.list_blocks",
     "pymarkdown.plugin_manager",
     "pymarkdown.plugins",
+    "pymarkdown.plugins.utils",
     "pymarkdown.resources",
     "pymarkdown.tokens",
     "pymarkdown.transform_gfm",

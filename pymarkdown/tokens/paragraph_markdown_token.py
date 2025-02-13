@@ -2,9 +2,12 @@
 Module to provide for an encapsulation of the paragraph element.
 """
 
-from typing import Optional, cast
+from typing import Optional, Union, cast
+
+from typing_extensions import override
 
 from pymarkdown.general.parser_helper import ParserHelper
+from pymarkdown.general.parser_logger import ParserLogger
 from pymarkdown.general.position_marker import PositionMarker
 from pymarkdown.tokens.leaf_markdown_token import LeafMarkdownToken
 from pymarkdown.tokens.markdown_token import EndMarkdownToken, MarkdownToken
@@ -124,7 +127,7 @@ class ParagraphMarkdownToken(LeafMarkdownToken):
         if ParserHelper.newline_character in extracted_whitespace:
             line_end_index = extracted_whitespace.index(ParserHelper.newline_character)
             extracted_whitespace = extracted_whitespace[:line_end_index]
-        return ParserHelper.resolve_all_from_text(extracted_whitespace)
+        return f"{ParserLogger.start_range_sequence}{ParserHelper.resolve_all_from_text(extracted_whitespace)}"
 
     @staticmethod
     def __rehydrate_paragraph_end(
@@ -154,8 +157,8 @@ class ParagraphMarkdownToken(LeafMarkdownToken):
         )
         assert (
             rehydrate_index == expected_rehydrate_index
-        ), f"rehydrate_index={rehydrate_index};expected_rehydrate_index={expected_rehydrate_index}"
-        return f"{top_stack_token.final_whitespace}{ParserHelper.newline_character}"
+        ), "Rehydrate index must match up at end of paragraph."
+        return f"{top_stack_token.final_whitespace}{ParserLogger.end_range_sequence}{ParserHelper.newline_character}"
 
     @staticmethod
     def register_for_html_transform(
@@ -197,3 +200,11 @@ class ParagraphMarkdownToken(LeafMarkdownToken):
             if transform_state.is_in_loose_list
             else output_html
         )
+
+    @override
+    def _modify_token(self, field_name: str, field_value: Union[str, int]) -> bool:
+        if field_name == "extracted_whitespace" and isinstance(field_value, str):
+            self.__extracted_whitespace = field_value
+            self.__compose_extra_data_field()
+            return True
+        return False

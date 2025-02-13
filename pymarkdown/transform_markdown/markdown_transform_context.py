@@ -3,6 +3,7 @@ Module to provide context to markdown transforms.
 """
 
 import logging
+from dataclasses import dataclass
 from typing import List, Optional
 
 from typing_extensions import Protocol
@@ -14,6 +15,15 @@ from pymarkdown.transform_gfm.transform_state import TransformState
 POGGER = ParserLogger(logging.getLogger(__name__))
 
 
+@dataclass
+class IndentAdjustment:
+    """
+    Class to hold indent adjustments.
+    """
+
+    adjustment: int = 0
+
+
 # pylint: disable=too-few-public-methods
 class MarkdownTransformContext:
     """
@@ -23,6 +33,8 @@ class MarkdownTransformContext:
     def __init__(self) -> None:
         self.block_stack: List[MarkdownToken] = []
         self.container_token_stack: List[MarkdownToken] = []
+        self.original_container_token_stack: List[MarkdownToken] = []
+        self.container_token_indents: List[IndentAdjustment] = []
 
 
 # pylint: enable=too-few-public-methods
@@ -39,8 +51,7 @@ class StartMarkdownTokenTransformProtocol(Protocol):
         context: "MarkdownTransformContext",
         current_token: MarkdownToken,
         previous_token: Optional[MarkdownToken],
-    ) -> str:
-        ...  # pragma: no cover
+    ) -> str: ...  # pragma: no cover
 
 
 # pylint: enable=too-few-public-methods
@@ -58,8 +69,7 @@ class EndMarkdownTokenTransformProtocol(Protocol):
         current_token: MarkdownToken,
         previous_token: Optional[MarkdownToken],
         next_token: Optional[MarkdownToken],
-    ) -> str:
-        ...  # pragma: no cover
+    ) -> str: ...  # pragma: no cover
 
 
 # pylint: enable=too-few-public-methods
@@ -79,8 +89,7 @@ class StartMarkdownContainerTokenTransformProtocol(Protocol):
         previous_token: Optional[MarkdownToken],
         next_token: Optional[MarkdownToken],
         transformed_data: str,
-    ) -> str:
-        ...  # pragma: no cover
+    ) -> str: ...  # pragma: no cover
 
     # pylint: enable=too-many-arguments
 
@@ -100,8 +109,7 @@ class EndMarkdownContainerTokenTransformProtocol(Protocol):
         current_token: MarkdownToken,
         actual_tokens: List[MarkdownToken],
         token_index: int,
-    ) -> str:
-        ...  # pragma: no cover
+    ) -> str: ...  # pragma: no cover
 
 
 # pylint: enable=too-few-public-methods
@@ -118,8 +126,7 @@ class RegisterMarkdownTransformHandlersProtocol(Protocol):
         type_to_register: type,
         start_function: StartMarkdownTokenTransformProtocol,
         end_function: Optional[EndMarkdownTokenTransformProtocol],
-    ) -> None:
-        ...  # pragma: no cover
+    ) -> None: ...  # pragma: no cover
 
 
 # pylint: enable=too-few-public-methods
@@ -136,8 +143,7 @@ class StartHtmlTokenTransformProtocol(Protocol):
         output_html: str,
         next_token: MarkdownToken,
         transform_state: TransformState,
-    ) -> str:
-        ...  # pragma: no cover
+    ) -> str: ...  # pragma: no cover
 
 
 # pylint: enable=too-few-public-methods
@@ -154,8 +160,7 @@ class EndHtmlTokenTransformProtocol(Protocol):
         output_html: str,
         next_token: MarkdownToken,
         transform_state: TransformState,
-    ) -> str:
-        ...  # pragma: no cover
+    ) -> str: ...  # pragma: no cover
 
 
 # pylint: enable=too-few-public-methods
@@ -172,8 +177,7 @@ class RegisterHtmlTransformHandlersProtocol(Protocol):
         type_to_register: type,
         start_function: StartHtmlTokenTransformProtocol,
         end_function: Optional[EndHtmlTokenTransformProtocol],
-    ) -> None:
-        ...  # pragma: no cover
+    ) -> None: ...  # pragma: no cover
 
 
 # pylint: enable=too-few-public-methods

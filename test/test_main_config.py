@@ -1,11 +1,12 @@
 """
 Module to provide tests related to the basic parts of the scanner.
 """
+
 import os
 import tempfile
 from test.markdown_scanner import MarkdownScanner
 
-from .utils import write_temporary_configuration
+from .utils import create_temporary_configuration_file, temporary_change_to_directory
 
 
 def test_markdown_with_dash_e_single_by_id_and_good_config():
@@ -21,9 +22,9 @@ def test_markdown_with_dash_e_single_by_id_and_good_config():
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"plugins": {"md999": {"test_value": 2}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-e",
             "MD999",
@@ -62,9 +63,6 @@ MD999>>completed_file
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_dash_e_single_by_id_and_bad_config():
@@ -80,9 +78,9 @@ def test_markdown_with_dash_e_single_by_id_and_bad_config():
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"plugins": {"md999": {"test_value": "fred"}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-e",
             "MD999",
@@ -121,9 +119,6 @@ MD999>>completed_file
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_dash_e_single_by_id_and_bad_config_file():
@@ -138,9 +133,9 @@ def test_markdown_with_dash_e_single_by_id_and_bad_config_file():
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"plugins": {"myrule.md999": {"test_value": "fred"}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-e",
             "MD999",
@@ -165,9 +160,6 @@ def test_markdown_with_dash_e_single_by_id_and_bad_config_file():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_dash_e_single_by_id_and_non_json_config_file():
@@ -185,9 +177,9 @@ def test_markdown_with_dash_e_single_by_id_and_non_json_config_file():
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = "not a json file"
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-e",
             "MD999",
@@ -199,7 +191,7 @@ def test_markdown_with_dash_e_single_by_id_and_non_json_config_file():
 
         expected_return_code = 1
         expected_output = ""
-        expected_error = f"Specified configuration file '{configuration_file}' was not parseable as a JSON file or a YAML file."
+        expected_error = f"Specified configuration file '{configuration_file}' was not parseable as a JSON, YAML, or TOML file."
 
         # Act
         execute_results = scanner.invoke_main(arguments=supplied_arguments)
@@ -208,9 +200,6 @@ def test_markdown_with_dash_e_single_by_id_and_non_json_config_file():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_dash_e_single_by_id_and_non_present_config_file():
@@ -269,9 +258,9 @@ def test_markdown_with_dash_e_single_by_id_and_good_select_config():
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"plugins": {"md999": {"other_test_value": 2}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-e",
             "MD999",
@@ -310,9 +299,6 @@ MD999>>completed_file
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_dash_e_single_by_id_and_bad_select_config():
@@ -331,9 +317,9 @@ def test_markdown_with_dash_e_single_by_id_and_bad_select_config():
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"plugins": {"MD999": {"other_test_value": 9}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-e",
             "MD999",
@@ -372,9 +358,6 @@ MD999>>completed_file
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_dash_e_single_by_id_and_config_causing_config_exception():
@@ -389,9 +372,9 @@ def test_markdown_with_dash_e_single_by_id_and_config_causing_config_exception()
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"plugins": {"md999": {"test_value": 10}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-e",
             "MD999",
@@ -407,7 +390,7 @@ MD999>>test_value>>10
 MD999>>other_test_value>>1
 """
         expected_error = """BadPluginError encountered while configuring plugins:
-Plugin id 'MD999' had a critical failure during the 'apply_configuration' action.
+Plugin id 'MD999' had a critical failure during the '__apply_configuration' action.
 """
 
         # Act
@@ -417,9 +400,6 @@ Plugin id 'MD999' had a critical failure during the 'apply_configuration' action
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_dash_e_single_by_id_and_config_causing_next_token_exception():
@@ -434,9 +414,9 @@ def test_markdown_with_dash_e_single_by_id_and_config_causing_next_token_excepti
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"plugins": {"md999": {"test_value": 20}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-e",
             "MD999",
@@ -466,9 +446,6 @@ MD999>>token:[atx(1,1):1:0:]
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_bad_strict_config_type():
@@ -483,9 +460,9 @@ def test_markdown_with_bad_strict_config_type():
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"mode": {"strict-config": 2}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -504,9 +481,6 @@ def test_markdown_with_bad_strict_config_type():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_good_strict_config_type():
@@ -521,9 +495,9 @@ def test_markdown_with_good_strict_config_type():
         "test", "resources", "rules", "md047", "end_with_blank_line.md"
     )
     supplied_configuration = {"mode": {"strict-config": True}, "log": {"file": 0}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -542,9 +516,6 @@ def test_markdown_with_good_strict_config_type():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 def test_markdown_with_default_configuration_file_with_error():
@@ -567,11 +538,9 @@ def test_markdown_with_default_configuration_file_with_error():
     # directory, so this test creates a new directory and executes the parser from
     # within that directory.
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        default_configuration_file = None
-        try:
-            default_configuration_file = write_temporary_configuration(
-                default_configuration, file_name=".pymarkdown", directory=tmp_dir_path
-            )
+        with create_temporary_configuration_file(
+            default_configuration, file_name=".pymarkdown", directory=tmp_dir_path
+        ):
             supplied_arguments = [
                 "scan",
                 source_path,
@@ -582,22 +551,13 @@ def test_markdown_with_default_configuration_file_with_error():
             expected_error = "Configuration Error: The value for property 'log.file' must be of type 'str'.\n"
 
             # Act
-            old_current_working_directory = os.getcwd()
-            try:
-                os.chdir(tmp_dir_path)
+            with temporary_change_to_directory(tmp_dir_path):
                 execute_results = scanner.invoke_main(arguments=supplied_arguments)
-            finally:
-                os.chdir(old_current_working_directory)
 
             # Assert
             execute_results.assert_results(
                 expected_output, expected_error, expected_return_code
             )
-        finally:
-            if default_configuration_file and os.path.exists(
-                default_configuration_file
-            ):
-                os.remove(default_configuration_file)
 
 
 def test_markdown_with_overlapping_configuration_files():
@@ -631,47 +591,33 @@ this is a very long line
     }
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        configuration_file = None
-        default_configuration_file = None
-        try:
-            configuration_file = write_temporary_configuration(
-                supplied_configuration, directory=tmp_dir_path
-            )
-            default_configuration_file = write_temporary_configuration(
+        with create_temporary_configuration_file(
+            supplied_configuration, directory=tmp_dir_path
+        ) as configuration_file:
+            with create_temporary_configuration_file(
                 default_configuration, file_name=".pymarkdown", directory=tmp_dir_path
-            )
-            supplied_arguments = ["-c", configuration_file, "scan-stdin"]
-
-            expected_return_code = 1
-            expected_output = (
-                "stdin:4:3: MD004: Inconsistent Unordered List Start style "
-                + "[Expected: asterisk; Actual: dash] (ul-style)\n"
-                + "stdin:5:1: MD013: Line length [Expected: 10, Actual: 28] (line-length)\n"
-                + "stdin:7:1: MD013: Line length [Expected: 10, Actual: 24] (line-length)"
-            )
-            expected_error = ""
-
-            # Act
-            old_current_working_directory = os.getcwd()
-            try:
-                os.chdir(tmp_dir_path)
-                execute_results = scanner.invoke_main(
-                    arguments=supplied_arguments, standard_input_to_use=xxx
-                )
-            finally:
-                os.chdir(old_current_working_directory)
-
-            # Assert
-            execute_results.assert_results(
-                expected_output, expected_error, expected_return_code
-            )
-        finally:
-            if default_configuration_file and os.path.exists(
-                default_configuration_file
             ):
-                os.remove(default_configuration_file)
-            if configuration_file and os.path.exists(configuration_file):
-                os.remove(configuration_file)
+                supplied_arguments = ["-c", configuration_file, "scan-stdin"]
+
+                expected_return_code = 1
+                expected_output = (
+                    "stdin:4:3: MD004: Inconsistent Unordered List Start style "
+                    + "[Expected: asterisk; Actual: dash] (ul-style)\n"
+                    + "stdin:5:1: MD013: Line length [Expected: 10, Actual: 28] (line-length)\n"
+                    + "stdin:7:1: MD013: Line length [Expected: 10, Actual: 24] (line-length)"
+                )
+                expected_error = ""
+
+                # Act
+                with temporary_change_to_directory(tmp_dir_path):
+                    execute_results = scanner.invoke_main(
+                        arguments=supplied_arguments, standard_input_to_use=xxx
+                    )
+
+                # Assert
+                execute_results.assert_results(
+                    expected_output, expected_error, expected_return_code
+                )
 
 
 def test_markdown_with_pyproject_configuration_file_with_error():
@@ -695,13 +641,9 @@ a.c = "3"
     # directory, so this test creates a new directory and executes the parser from
     # within that directory.
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        default_configuration_file = None
-        try:
-            default_configuration_file = write_temporary_configuration(
-                default_configuration,
-                file_name="pyproject.toml",
-                directory=tmp_dir_path,
-            )
+        with create_temporary_configuration_file(
+            default_configuration, file_name="pyproject.toml", directory=tmp_dir_path
+        ):
             supplied_arguments = [
                 "--strict-config",
                 "scan",
@@ -713,19 +655,65 @@ a.c = "3"
             expected_error = "Configuration Error: The value for property 'log.file' must be of type 'str'.\n"
 
             # Act
-            old_current_working_directory = os.getcwd()
-            try:
-                os.chdir(tmp_dir_path)
+            with temporary_change_to_directory(tmp_dir_path):
                 execute_results = scanner.invoke_main(arguments=supplied_arguments)
-            finally:
-                os.chdir(old_current_working_directory)
 
             # Assert
             execute_results.assert_results(
                 expected_output, expected_error, expected_return_code
             )
-        finally:
-            if default_configuration_file and os.path.exists(
-                default_configuration_file
-            ):
-                os.remove(default_configuration_file)
+
+
+def test_markdown_with_pyproject_direct_configuration_file_with_error():
+    """
+    Test to make sure that a pyproject configuration will be read and have the
+    same errors as if it was specified on the command line.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_path = os.path.join(
+        "test", "resources", "rules", "md047", "end_with_blank_line.md"
+    )
+    default_configuration = """
+[tool.pymarkdown]
+plugins.MD013.enabled = false
+plugins.MD003.style = "atx"
+plugins.MD004.style = "asterisk"
+plugins.MD007.indent = 4
+plugins.MD033.enabled = false
+plugins.MD041.enabled = false
+plugins.MD022.enabled = false
+log.file = 2
+"""
+
+    # Note that the default configuration file is determined by the current working
+    # directory, so this test creates a new directory and executes the parser from
+    # within that directory.
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        with create_temporary_configuration_file(
+            default_configuration,
+            file_name="pyproject.toml",
+            directory=tmp_dir_path,
+            file_name_suffix=".toml",
+        ) as config_path:
+            supplied_arguments = [
+                "--strict-config",
+                "--config",
+                config_path,
+                "scan",
+                source_path,
+            ]
+
+            expected_return_code = 1
+            expected_output = ""
+            expected_error = "Configuration Error: The value for property 'log.file' must be of type 'str'.\n"
+
+            # Act
+            with temporary_change_to_directory(tmp_dir_path):
+                execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+            # Assert
+            execute_results.assert_results(
+                expected_output, expected_error, expected_return_code
+            )

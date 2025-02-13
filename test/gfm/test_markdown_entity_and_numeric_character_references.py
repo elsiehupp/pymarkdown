@@ -1,8 +1,13 @@
 """
 https://github.github.com/gfm/#entity-and-numeric-character-references
 """
+
 import os
-from test.utils import act_and_assert
+from test.utils import (
+    act_and_assert,
+    assert_that_exception_is_raised,
+    assert_that_exception_is_raised2,
+)
 
 import pytest
 
@@ -617,10 +622,7 @@ def test_character_references_337():
     source_markdown = """[a](url &quot;tit&quot;)"""
     expected_tokens = [
         "[para(1,1):]",
-        "[text(1,1):[:]",
-        "[text(1,2):a:]",
-        "[text(1,3):]:]",
-        '[text(1,4):(url \a&quot;\a\a"\a&quot;\a\atit\a&quot;\a\a"\a&quot;\a\a):]',
+        '[text(1,1):[a](url \a&quot;\a\a"\a&quot;\a\atit\a&quot;\a\a"\a&quot;\a\a):]',
         "[end-para:::True]",
     ]
     expected_gfm = """<p>[a](url &quot;tit&quot;)</p>"""
@@ -718,16 +720,19 @@ def test_missing_entities_json_file():
         alternate_resource_directory, alternate_resource_file
     )
 
-    try:
-        TokenizedMarkdown(resource_path=alternate_resource_directory)
+    expected_output = (
+        "Named character entity map file '"
+        + alternate_resource_path
+        + "' was not loaded ([Errno 2] No such file or directory: '"
+    )
 
-        raise AssertionError("Should have exited prior to this.")
-    except BadTokenizationError as this_exception:
-        assert str(this_exception).startswith(
-            "Named character entity map file '"
-            + alternate_resource_path
-            + "' was not loaded ([Errno 2] No such file or directory: '"
-        )
+    # Act & Assert
+    assert_that_exception_is_raised2(
+        BadTokenizationError,
+        expected_output,
+        TokenizedMarkdown,
+        resource_path=alternate_resource_directory,
+    )
 
 
 def test_bad_entities_json_file():
@@ -742,17 +747,12 @@ def test_bad_entities_json_file():
         alternate_resource_path, "entities.json"
     )
 
-    print(f">>{alternate_resource_path}")
-    print(f">>{full_alternate_resource_path}")
+    expected_output = f"Named character entity map file '{full_alternate_resource_path}' is not a valid JSON file (Expecting value: line 1 column 1 (char 0))."
 
-    try:
-        TokenizedMarkdown(resource_path=alternate_resource_path)
-
-        raise AssertionError("Should have exited prior to this.")
-    except BadTokenizationError as this_exception:
-        assert (
-            str(this_exception)
-            == "Named character entity map file '"
-            + full_alternate_resource_path
-            + "' is not a valid JSON file (Expecting value: line 1 column 1 (char 0))."
-        )
+    # Act & Assert
+    assert_that_exception_is_raised(
+        BadTokenizationError,
+        expected_output,
+        TokenizedMarkdown,
+        alternate_resource_path,
+    )

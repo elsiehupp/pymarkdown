@@ -1,9 +1,11 @@
 """
 Module to provide tests related to the MD036 rule.
 """
+
 import os
 from test.markdown_scanner import MarkdownScanner
-from test.utils import write_temporary_configuration
+from test.rules.utils import execute_query_configuration_test, pluginQueryConfigTest
+from test.utils import create_temporary_configuration_file
 
 import pytest
 
@@ -351,9 +353,9 @@ def test_md036_bad_proper_emphasis_ending_with_punctuation_with_configuration():
         "proper_emphasis_ending_with_punctuation.md",
     )
     supplied_configuration = {"plugins": {"md036": {"punctuation": ".!"}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -378,9 +380,6 @@ def test_md036_bad_proper_emphasis_ending_with_punctuation_with_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -490,3 +489,26 @@ def test_md036_bad_valid_emphasis_headings_in_block_quote():
     execute_results.assert_results(
         expected_output, expected_error, expected_return_code
     )
+
+
+def test_md036_query_config():
+    config_test = pluginQueryConfigTest(
+        "md036",
+        """
+  ITEM               DESCRIPTION
+
+  Id                 md036
+  Name(s)            no-emphasis-as-heading,no-emphasis-as-header
+  Short Description  Emphasis possibly used instead of a heading element.
+  Description Url    https://pymarkdown.readthedocs.io/en/latest/plugins/rule_
+                     md036.md
+
+
+  CONFIGURATION ITEM  TYPE    VALUE
+
+  punctuation         string  ".,;:!?。，；
+                              ：？"
+
+""",
+    )
+    execute_query_configuration_test(config_test)

@@ -3,11 +3,15 @@ Module to provide structure to scan through a file.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Union, cast
+from typing import List, Optional, Union, cast
 
 from application_properties import ApplicationPropertiesFacade
 
-from pymarkdown.plugin_manager.plugin_details import PluginDetails, PluginDetailsV2
+from pymarkdown.plugin_manager.plugin_details import (
+    PluginDetails,
+    PluginDetailsV2,
+    QueryConfigItem,
+)
 from pymarkdown.plugin_manager.plugin_scan_context import PluginScanContext
 from pymarkdown.tokens.markdown_token import MarkdownToken
 from pymarkdown.tokens.setext_heading_markdown_token import SetextHeadingMarkdownToken
@@ -26,7 +30,8 @@ class RulePlugin(ABC):
             self.__is_next_line_implemented_in_plugin,
             self.__is_starting_new_file_implemented_in_plugin,
             self.__is_completed_file_implemented_in_plugin,
-        ) = (True, True, True, True)
+            self.__is_query_config_implemented_in_plugin,
+        ) = (True, True, True, True, False)
         self.__plugin_specific_facade: Optional[ApplicationPropertiesFacade] = None
 
     @abstractmethod
@@ -51,6 +56,14 @@ class RulePlugin(ABC):
         """
         self.__plugin_specific_facade = plugin_specific_facade
 
+        # x = self.__class__.__dict__
+        # y = self.get_details()
+        # if y.plugin_id.lower() == "pml101":
+        #     y = y.plugin_id.lower()
+
+        self.__is_query_config_implemented_in_plugin = (
+            "query_config" in self.__class__.__dict__
+        )
         self.__is_next_token_implemented_in_plugin = (
             "next_token" in self.__class__.__dict__
         )
@@ -63,6 +76,13 @@ class RulePlugin(ABC):
         self.__is_completed_file_implemented_in_plugin = (
             "completed_file" in self.__class__.__dict__
         )
+
+    @property
+    def is_query_config_implemented_in_plugin(self) -> bool:
+        """
+        Return whether the query_config function is implemented in the plugin.
+        """
+        return self.__is_query_config_implemented_in_plugin
 
     @property
     def is_starting_new_file_implemented_in_plugin(self) -> bool:
@@ -106,6 +126,20 @@ class RulePlugin(ABC):
         """
         context.register_fix_token_request(
             token, self.get_details().plugin_id, plugin_action, field_name, field_value
+        )
+
+    def register_replace_tokens_request(
+        self,
+        context: PluginScanContext,
+        start_token: MarkdownToken,
+        end_token: MarkdownToken,
+        replacement_tokens: List[MarkdownToken],
+    ) -> None:
+        """
+        Register a request to replace a sequence of tokens.
+        """
+        context.register_replace_tokens_request(
+            self.get_details().plugin_id, start_token, end_token, replacement_tokens
         )
 
     # pylint: enable=too-many-arguments
@@ -166,9 +200,11 @@ class RulePlugin(ABC):
         context.add_triggered_rule(
             context.scan_file,
             line_number + line_number_delta,
-            column_number + column_number_delta
-            if column_number_delta >= 0
-            else -column_number_delta,
+            (
+                column_number + column_number_delta
+                if column_number_delta >= 0
+                else -column_number_delta
+            ),
             plugin_details.plugin_id,
             plugin_details.plugin_name,
             plugin_details.plugin_description,
@@ -182,6 +218,12 @@ class RulePlugin(ABC):
         """
         Event to allow the plugin to load configuration information.
         """
+
+    def query_config(self) -> List[QueryConfigItem]:  # noqa: B027
+        """
+        Query to find out the configuration that the rule is using.
+        """
+        return []  # pragma: no cover
 
     def starting_new_file(self) -> None:  # noqa: B027
         """

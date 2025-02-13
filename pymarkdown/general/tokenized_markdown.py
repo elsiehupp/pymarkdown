@@ -1,6 +1,7 @@
 """
 Module to provide a tokenization of a markdown-encoded string.
 """
+
 import logging
 import os
 from typing import List, Optional, Tuple, cast
@@ -18,6 +19,7 @@ from pymarkdown.extension_manager.extension_manager import ExtensionManager
 from pymarkdown.extensions.front_matter_extension import FrontMatterExtension
 from pymarkdown.extensions.pragma_token import PragmaToken
 from pymarkdown.general.bad_tokenization_error import BadTokenizationError
+from pymarkdown.general.constants import Constants
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.parser_logger import ParserLogger
 from pymarkdown.general.parser_state import ParserState
@@ -51,6 +53,8 @@ from pymarkdown.tokens.stack_token import (
 
 POGGER = ParserLogger(logging.getLogger(__name__))
 
+# pylint: disable=too-many-lines
+
 
 class TokenizedMarkdown:
     """
@@ -66,6 +70,7 @@ class TokenizedMarkdown:
         self.__token_stack: List[StackToken] = []
         self.__parse_properties: Optional[ParseBlockPassProperties] = None
         self.__source_provider: Optional[SourceProvider] = None
+        self.__extension_manager: Optional[ExtensionManager] = None
 
         if not resource_path:
             resource_path = os.path.join(os.path.split(__file__)[0], "..", "resources")
@@ -81,6 +86,7 @@ class TokenizedMarkdown:
         Apply any configuration map.
         """
         _ = application_properties
+        self.__extension_manager = extension_manager
         self.__parse_properties = ParseBlockPassProperties(extension_manager)
 
     def transform_from_provider(
@@ -119,7 +125,10 @@ class TokenizedMarkdown:
             self.__tokenized_document = []
             self.__token_stack = []
 
-            InlineProcessor.initialize()
+            assert (
+                self.__extension_manager is not None
+            ), "Extension manager must be initialized by this point."
+            InlineProcessor.initialize(self.__extension_manager)
             LinkParseHelper.initialize()
 
             POGGER.debug("\n\n>>>>>>>parse_blocks_pass>>>>>>")
@@ -131,10 +140,18 @@ class TokenizedMarkdown:
             )
 
             POGGER.debug("\n\n>>>>>>>parse_inline>>>>>>")
-            final_pass_results = InlineProcessor.parse_inline(coalesced_results)
+            assert (
+                self.__parse_properties is not None
+            ), "Parse properties must be defined by this point."
+            final_pass_results = InlineProcessor.parse_inline(
+                coalesced_results, self.__parse_properties
+            )
 
+            final_coalesced_results = CoalesceProcessor.coalesce_text_blocks(
+                final_pass_results, only_change_text_blocks=True
+            )
             POGGER.debug("\n\n>>>>>>>final_pass_results>>>>>>")
-            return final_pass_results
+            return final_coalesced_results
         except Exception as this_exception:
             raise BadTokenizationError(
                 "An unhandled error occurred processing the document."
@@ -147,8 +164,12 @@ class TokenizedMarkdown:
         The first pass at the tokens is to deal with blocks.
         """
 
-        assert self.__parse_properties is not None
-        assert self.__source_provider is not None
+        assert (
+            self.__parse_properties is not None
+        ), "Parse properties must be defined by this point."
+        assert (
+            self.__source_provider is not None
+        ), "Source provider must be defined by this point."
         self.__token_stack = [DocumentStackToken()]
         self.__tokenized_document = []
         self.__parse_properties.pragma_lines = {}
@@ -220,11 +241,15 @@ class TokenizedMarkdown:
         POGGER.debug("line_number>>$", line_number)
         POGGER.debug("---")
 
+        assert (
+            self.__parse_properties is not None
+        ), "Parse properties must be defined by this point."
         parser_state = ParserState(
             self.__token_stack,
             self.__tokenized_document,
             TokenizedMarkdown.__close_open_blocks,
             self.__handle_blank_line,
+            self.__parse_properties,
         )
         keep_on_going = True
         if did_start_close:
@@ -237,7 +262,9 @@ class TokenizedMarkdown:
                 requeue_line_info,
             ) = self.__main_pass_did_start_close(parser_state, line_number)
         else:
-            assert next_line_in_document is not None
+            assert (
+                next_line_in_document is not None
+            ), "If not closing, must have a next line to process."
             position_marker = PositionMarker(line_number, 0, next_line_in_document)
             (
                 tfl,
@@ -248,7 +275,7 @@ class TokenizedMarkdown:
                 next_line_in_document,
                 ignore_link_definition_start,
             )
-            assert tfl is not None
+            assert tfl is not None, "Markdown token list cannot be empty."
             tokens_from_line = tfl
 
         if keep_on_going:
@@ -303,9 +330,13 @@ class TokenizedMarkdown:
         keep_on_going = bool(requeue_line_info and requeue_line_info.lines_to_requeue)
         did_start_close = not keep_on_going
         if keep_on_going:
-            assert was_link_definition_started_before_close
-            assert requeue_line_info is not None
-            assert not requeue_line_info.lines_to_requeue[0]
+            assert (
+                was_link_definition_started_before_close
+            ), "LRD parsing must not have been started."
+            assert (
+                requeue_line_info is not None
+                and not requeue_line_info.lines_to_requeue[0]
+            ), "Cannot handling requeing"
 
             del requeue_line_info.lines_to_requeue[0]
             line_number -= 1
@@ -329,7 +360,9 @@ class TokenizedMarkdown:
     ) -> Tuple[Optional[List[MarkdownToken]], Optional[RequeueLineInfo]]:
         POGGER.debug(">>>>$", self.__tokenized_document)
 
-        if not next_line_in_document or not next_line_in_document.strip():
+        if not next_line_in_document or not next_line_in_document.strip(
+            Constants.ascii_whitespace
+        ):
             POGGER.debug("call __parse_blocks_pass>>handle_blank_line")
             (
                 tokens_from_line,
@@ -342,7 +375,9 @@ class TokenizedMarkdown:
             )
         else:
             POGGER.debug("\n\nnormal lines")
-            assert self.__parse_properties is not None
+            assert (
+                self.__parse_properties is not None
+            ), "Parse properties must be defined by this point."
             (
                 tokens_from_line,
                 _,
@@ -448,7 +483,9 @@ class TokenizedMarkdown:
         elif did_started_close:
             did_start_close = True
         else:
-            assert self.__source_provider is not None
+            assert (
+                self.__source_provider is not None
+            ), "Source provider must be defined by this point."
             next_line_in_document = self.__source_provider.get_next_line()
             if next_line_in_document is None:
                 did_start_close = True
@@ -553,11 +590,15 @@ class TokenizedMarkdown:
             requeue_line_info.lines_to_requeue,
         )
         if requeue_reset:
-            assert parser_state.original_line_to_parse is not None
+            assert (
+                parser_state.original_line_to_parse is not None
+            ), "Original line to parse must be defined by this point."
             POGGER.debug(
                 "cob>>original_line_to_parse>$>", parser_state.original_line_to_parse
             )
-            assert not requeue_line_info.lines_to_requeue[0]
+            assert not requeue_line_info.lines_to_requeue[
+                0
+            ], "Resetting implies something must have been there to reset."
             requeue_line_info.lines_to_requeue[0] = parser_state.original_line_to_parse
             POGGER.debug(
                 "cob>>(adjusted)lines_to_requeue>>$",
@@ -691,7 +732,9 @@ class TokenizedMarkdown:
         if not can_continue:
             POGGER.debug("BOOOM-->break")
         else:
-            assert not (requeue_line_info and requeue_line_info.lines_to_requeue)
+            assert not (
+                requeue_line_info and requeue_line_info.lines_to_requeue
+            ), "Cannot requeue at this point."
             POGGER.debug(
                 "cob->process_link_reference_definition>>outer_processed>>$",
                 outer_processed,
@@ -704,7 +747,7 @@ class TokenizedMarkdown:
                 "cob->process_link_reference_definition>>adjusted_tokens>>$",
                 adjusted_tokens,
             )
-            assert not did_pause_lrd
+            assert not did_pause_lrd, "LRD parsing must not be paused."
         return can_continue, adjusted_tokens, requeue_line_info
 
     @staticmethod
@@ -752,11 +795,10 @@ class TokenizedMarkdown:
         POGGER.debug("hbl>>close_only_these_blocks>>$", close_only_these_blocks)
         POGGER.debug("hbl>>do_include_block_quotes>>$", do_include_block_quotes)
 
-        non_whitespace_index, extracted_whitespace = ParserHelper.extract_spaces(
-            input_line, 0
-        )
-        assert extracted_whitespace is not None
-        assert non_whitespace_index is not None
+        (
+            non_whitespace_index,
+            extracted_whitespace,
+        ) = ParserHelper.extract_ascii_whitespace_verified(input_line, 0)
         return (
             close_only_these_blocks,
             do_include_block_quotes,
@@ -787,13 +829,15 @@ class TokenizedMarkdown:
             force_default_handling,
             requeue_line_info,
         ) = TokenizedMarkdown.__handle_blank_line_token_stack(parser_state)
-
         if requeue_line_info:
             return new_tokens, requeue_line_info
 
         if from_main_transform:
             POGGER.debug("hbl>>__handle_blank_line_in_block_quote")
             TokenizedMarkdown.__handle_blank_line_in_block_quote(
+                parser_state, new_tokens
+            )
+            new_tokens = TokenizedMarkdown.__handle_blank_line_close_first_quote(
                 parser_state, new_tokens
             )
 
@@ -815,6 +859,9 @@ class TokenizedMarkdown:
         POGGER.debug("list_stack_index>>$", list_stack_index)
         POGGER.debug("block_stack_index>>$", block_stack_index)
         if list_stack_index > 0 and list_stack_index > block_stack_index:
+
+            TokenizedMarkdown.__handle_blank_line_bravo(parser_state, block_stack_index)
+
             list_token = cast(
                 ListStartMarkdownToken,
                 parser_state.token_stack[list_stack_index].matching_markdown_token,
@@ -824,12 +871,63 @@ class TokenizedMarkdown:
             POGGER.debug("hbl>>last_block_token>>$", list_token)
 
         POGGER.debug("hbl>>new_tokens>>$", new_tokens)
-        assert non_whitespace_index == len(input_line)
-        assert not (requeue_line_info and requeue_line_info.force_ignore_first_as_lrd)
+        assert non_whitespace_index == len(
+            input_line
+        ), "Index must be set to the end of the line, since processing has completed."
+        # assert not (
+        #     requeue_line_info and requeue_line_info.force_ignore_first_as_lrd
+        # ), "TOoDO: huh?"
         new_tokens.append(BlankLineMarkdownToken(extracted_whitespace, position_marker))
         POGGER.debug("hbl>>new_tokens>>$", new_tokens)
 
-        return new_tokens, requeue_line_info
+        return new_tokens, None
+
+    @staticmethod
+    def __handle_blank_line_bravo(
+        parser_state: ParserState, block_stack_index: int
+    ) -> None:
+        search_index = 0
+        next_index = block_stack_index - 1
+        while next_index > 0:
+            if parser_state.token_stack[next_index].is_list:
+                search_index = next_index
+                break
+            next_index -= 1
+        if search_index:
+            found_markdown_token = parser_state.token_stack[
+                next_index
+            ].matching_markdown_token
+            assert found_markdown_token is not None
+            block_copy_token = next(  # pragma: no cover
+                (
+                    j
+                    for j in parser_state.block_copy
+                    if (
+                        j is not None
+                        and j.line_number == found_markdown_token.line_number
+                        and j.column_number == found_markdown_token.column_number
+                    )
+                ),
+                None,
+            )
+
+            # assert on next line was if statement with rest of function in if block
+            assert block_copy_token is not None
+            assert found_markdown_token.is_list_start
+            found_markdown_list_token = cast(
+                ListStartMarkdownToken, found_markdown_token
+            )
+            found_markdown_token_leading_spaces = (
+                found_markdown_list_token.leading_spaces
+            )
+            assert block_copy_token.is_list_start
+            block_copy_list_token = cast(ListStartMarkdownToken, block_copy_token)
+            block_copy_token_leading_spaces = block_copy_list_token.leading_spaces
+            are_same = (
+                found_markdown_token_leading_spaces == block_copy_token_leading_spaces
+            )
+            assert not are_same
+            found_markdown_list_token.remove_last_leading_space()
 
     @staticmethod
     def __handle_blank_line_token_stack(
@@ -865,7 +963,7 @@ class TokenizedMarkdown:
             ) = LinkReferenceDefinitionHelper.process_link_reference_definition(
                 parser_state, empty_position_marker, "", "", "", 0, 0, "", 2
             )
-            assert not did_pause_lrd
+            assert not did_pause_lrd, "LRD parsing must not be paused."
             POGGER.debug(
                 "hbl<<process_link_reference_definition>>stopping link definition"
             )
@@ -892,10 +990,43 @@ class TokenizedMarkdown:
         return new_tokens, force_default_handling, requeue_line_info
 
     @staticmethod
+    def __handle_blank_line_close_first_quote(
+        parser_state: ParserState, new_tokens: Optional[List[MarkdownToken]]
+    ) -> Optional[List[MarkdownToken]]:
+
+        stack_index = 1
+        while (
+            stack_index < len(parser_state.token_stack)
+            and not parser_state.token_stack[stack_index].is_block_quote
+        ):
+            stack_index += 1
+
+        close_tokens, _ = parser_state.close_open_blocks_fn(
+            parser_state,
+            include_block_quotes=True,
+            include_lists=True,
+            until_this_index=stack_index,
+            was_forced=True,
+        )
+        POGGER.debug("close_tokens>>$", close_tokens)
+        if new_tokens is not None:
+            new_tokens.extend(close_tokens)
+        elif close_tokens:
+            new_tokens = close_tokens
+        return new_tokens
+
+    @staticmethod
     def __handle_blank_line_in_block_quote(
         parser_state: ParserState, new_tokens: Optional[List[MarkdownToken]]
     ) -> None:
+        assert new_tokens is None or len(new_tokens) <= 1
+        if new_tokens:
+            assert len(new_tokens) == 1
+            if new_tokens[0].is_list_end:
+                return
         stack_index = parser_state.find_last_container_on_stack()
+        if parser_state.token_stack[stack_index].is_list:
+            return
         POGGER.debug_with_visible_whitespace("new_tokens>>$", new_tokens)
         POGGER.debug("stack_index>>$", stack_index)
         if new_tokens and stack_index > 0:
@@ -903,7 +1034,9 @@ class TokenizedMarkdown:
             assert (
                 new_tokens[-1].is_html_block_end
                 or new_tokens[-1].is_link_reference_definition
-            ) and stack_index == (len(parser_state.token_stack) - 1)
+            ) and stack_index == (
+                len(parser_state.token_stack) - 1
+            ), "If here, must be in the right context."
             close_tokens, _ = parser_state.close_open_blocks_fn(
                 parser_state,
                 only_these_blocks=[BlockQuoteStackToken],
@@ -938,8 +1071,10 @@ class TokenizedMarkdown:
         line_number: int,
         requeue: List[str],
     ) -> Tuple[Optional[str], int, List[str]]:
-        assert self.__source_provider
-        assert self.__parse_properties
+        assert self.__source_provider, "Source provider must be defined by this point."
+        assert (
+            self.__parse_properties
+        ), "Parse properties must be defined by this point."
         POGGER.debug(
             "is_front_matter_enabled>>$",
             self.__parse_properties.is_front_matter_enabled,
@@ -948,11 +1083,18 @@ class TokenizedMarkdown:
             first_line_in_document is not None
             and self.__parse_properties.is_front_matter_enabled
         ):
+            assert (
+                self.__extension_manager is not None
+            ), "Extension manager must be initialized by this point."
+            raw_extension = self.__extension_manager.get_extension_instance(
+                FrontMatterExtension().get_identifier()
+            )
+            front_matter_extension = cast(FrontMatterExtension, raw_extension)
             (
                 first_line_in_document,
                 line_number,
                 requeue,
-            ) = FrontMatterExtension.process_header_if_present(
+            ) = front_matter_extension.process_header_if_present(
                 first_line_in_document,
                 line_number,
                 requeue,

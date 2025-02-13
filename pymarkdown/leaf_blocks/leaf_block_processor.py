@@ -1,8 +1,9 @@
 """
 Module to provide processing for the leaf blocks.
 """
+
 import logging
-from typing import List, Optional
+from typing import List
 
 from pymarkdown.container_blocks.container_grab_bag import ContainerGrabBag
 from pymarkdown.general.parser_logger import ParserLogger
@@ -26,19 +27,19 @@ class LeafBlockProcessor:
     Class to provide processing for the leaf blocks.
     """
 
+    # pylint: disable=too-many-arguments
     @staticmethod
     def is_paragraph_ending_leaf_block_start(
         parser_state: ParserState,
         line_to_parse: str,
         start_index: int,
-        extracted_whitespace: Optional[str],
-        exclude_thematic_break: bool = False,
+        extracted_whitespace: str,
+        original_line: str,
+        index_indent: int,
     ) -> bool:
         """
         Determine whether we have a valid leaf block start.
         """
-
-        assert not exclude_thematic_break
 
         is_thematic_break_start, _ = ThematicLeafBlockProcessor.is_thematic_break(
             line_to_parse,
@@ -57,6 +58,7 @@ class LeafBlockProcessor:
                 start_index,
                 extracted_whitespace,
                 parser_state.token_stack,
+                parser_state.parse_properties,
             )
             is_leaf_block_start = bool(is_html_block_start)
             POGGER.debug(
@@ -71,7 +73,13 @@ class LeafBlockProcessor:
                 _,
                 _,
             ) = FencedLeafBlockProcessor.is_fenced_code_block(
-                line_to_parse, start_index, extracted_whitespace
+                parser_state,
+                line_to_parse,
+                start_index,
+                extracted_whitespace,
+                original_line,
+                index_indent,
+                skip_whitespace_check=True,
             )
             POGGER.debug(
                 "is_paragraph_ending_leaf_block_start>>is_fenced_code_block>>$",
@@ -91,13 +99,15 @@ class LeafBlockProcessor:
         )
         return is_leaf_block_start
 
+    # pylint: enable=too-many-arguments
+
     # pylint: disable=too-many-arguments
     @staticmethod
     def handle_html_block(
         parser_state: ParserState,
         position_marker: PositionMarker,
         outer_processed: bool,
-        leaf_token_whitespace: Optional[str],
+        leaf_token_whitespace: str,
         new_tokens: List[MarkdownToken],
         grab_bag: ContainerGrabBag,
     ) -> bool:
@@ -112,12 +122,18 @@ class LeafBlockProcessor:
         if not outer_processed and not parser_state.token_stack[-1].is_html_block:
             POGGER.debug(">>html started?>>")
             old_top_of_stack = parser_state.token_stack[-1]
-            html_tokens, did_adjust_block_quote = HtmlHelper.parse_html_block(
+            (
+                html_tokens,
+                did_adjust_block_quote,
+                alt_removed_chars_at_start,
+                leaf_token_whitespace,
+            ) = HtmlHelper.parse_html_block(
                 parser_state,
                 position_marker,
                 leaf_token_whitespace,
                 grab_bag.block_quote_data,
                 grab_bag.original_line,
+                grab_bag,
             )
             if html_tokens:
                 POGGER.debug(">>html started>>")
@@ -126,11 +142,14 @@ class LeafBlockProcessor:
                     position_marker.index_indent,
                     old_top_of_stack,
                     html_tokens,
+                    grab_bag.block_quote_data,
+                    alt_removed_chars_at_start=alt_removed_chars_at_start,
+                    is_html=True,
+                    original_line=grab_bag.original_line,
                 )
             new_tokens.extend(html_tokens)
         if parser_state.token_stack[-1].is_html_block:
             POGGER.debug(">>html continued>>")
-            assert leaf_token_whitespace is not None
             html_tokens = HtmlHelper.check_normal_html_block_end(
                 parser_state,
                 position_marker.text_to_parse,
@@ -140,7 +159,7 @@ class LeafBlockProcessor:
                 grab_bag.original_line,
                 did_adjust_block_quote,
             )
-            assert html_tokens
+            assert html_tokens, "At least one token should have been produced."
             new_tokens.extend(html_tokens)
             outer_processed = True
         else:
@@ -152,7 +171,7 @@ class LeafBlockProcessor:
 
     @staticmethod
     def close_indented_block_if_indent_not_there(
-        parser_state: ParserState, leaf_token_whitespace: Optional[str]
+        parser_state: ParserState, leaf_token_whitespace: str
     ) -> List[MarkdownToken]:
         """
         If we have an indented block going on and the current line does not
@@ -165,7 +184,6 @@ class LeafBlockProcessor:
         )
         POGGER.debug("leaf_token_whitespace>>$>", leaf_token_whitespace)
         pre_tokens: List[MarkdownToken] = []
-        assert leaf_token_whitespace is not None
         if parser_state.token_stack[
             -1
         ].is_indented_code_block and TabHelper.is_length_less_than_or_equal_to(

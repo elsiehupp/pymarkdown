@@ -1,6 +1,7 @@
 """
 Module to provide for an encapsulation of the high level state of the parser.
 """
+
 from __future__ import annotations
 
 import copy
@@ -8,6 +9,9 @@ from typing import List, Optional, Tuple, cast
 
 from typing_extensions import Protocol
 
+from pymarkdown.container_blocks.parse_block_pass_properties import (
+    ParseBlockPassProperties,
+)
 from pymarkdown.general.position_marker import PositionMarker
 from pymarkdown.general.requeue_line_info import RequeueLineInfo
 from pymarkdown.tokens.block_quote_markdown_token import BlockQuoteMarkdownToken
@@ -33,8 +37,7 @@ class CloseOpenBlocksProtocol(Protocol):
         caller_can_handle_requeue: bool = False,
         requeue_reset: bool = False,
         was_forced: bool = False,
-    ) -> Tuple[List[MarkdownToken], Optional[RequeueLineInfo]]:
-        ...  # pragma: no cover
+    ) -> Tuple[List[MarkdownToken], Optional[RequeueLineInfo]]: ...  # pragma: no cover
 
     # pylint: enable=too-many-arguments
 
@@ -54,8 +57,9 @@ class HandleBlankLineProtocol(Protocol):
         input_line: str,
         from_main_transform: bool,
         position_marker: Optional[PositionMarker] = None,
-    ) -> Tuple[Optional[List[MarkdownToken]], Optional[RequeueLineInfo]]:
-        ...  # pragma: no cover
+    ) -> Tuple[
+        Optional[List[MarkdownToken]], Optional[RequeueLineInfo]
+    ]: ...  # pragma: no cover
 
 
 # pylint: enable=too-few-public-methods
@@ -67,12 +71,14 @@ class ParserState:
     Class to provide for an encapsulation of the high level state of the parser.
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         token_stack: List[StackToken],
         token_document: List[MarkdownToken],
         close_open_blocks_fn: CloseOpenBlocksProtocol,
         handle_blank_line_fn: HandleBlankLineProtocol,
+        parse_properties: ParseBlockPassProperties,
     ) -> None:
         (
             self.__token_stack,
@@ -94,6 +100,9 @@ class ParserState:
         self.nested_list_start: Optional[ListStackToken] = None
         self.copy_of_token_stack: List[StackToken] = []
         self.block_copy: List[Optional[MarkdownToken]] = []
+        self.parse_properties = parse_properties
+
+    # pylint: enable=too-many-arguments
 
     @property
     def token_stack(self) -> List[StackToken]:
@@ -257,7 +266,9 @@ class ParserState:
         if not self.token_stack[last_stack_index].is_document:
             self.__last_block_quote_stack_token = self.token_stack[last_stack_index]
             markdown_token = self.token_stack[last_stack_index].matching_markdown_token
-            assert markdown_token is not None
+            assert (
+                markdown_token is not None
+            ), "Always start with a container or leaf token, that has a matching markdown token."
             self.__last_block_quote_markdown_token_index = self.token_document.index(
                 markdown_token
             )

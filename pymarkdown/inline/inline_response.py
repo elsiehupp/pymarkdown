@@ -1,6 +1,7 @@
 """
 Module to hold the response from the inline handle_* functions.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -22,6 +23,8 @@ class InlineResponse:
     original_string: Optional[str] = None
     delta_line_number: int = 0
     delta_column_number: int = 0
+    reduce_remaining_line_by: int = 0
+    adj_newlines: int = 0
 
 
 # pylint: enable=too-many-instance-attributes

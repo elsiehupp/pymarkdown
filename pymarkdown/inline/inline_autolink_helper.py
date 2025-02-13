@@ -1,11 +1,15 @@
 """
 Module to help with the parsing of autolink inline elements.
 """
+
 import logging
 import re
 import string
-from typing import Optional, cast
+from typing import Optional, Tuple, Union, cast
 
+from pymarkdown.container_blocks.parse_block_pass_properties import (
+    ParseBlockPassProperties,
+)
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.parser_logger import ParserLogger
 from pymarkdown.html.html_raw_helper import HtmlRawHelper
@@ -14,6 +18,7 @@ from pymarkdown.inline.inline_response import InlineResponse
 from pymarkdown.tokens.email_autolink_markdown_token import EmailAutolinkMarkdownToken
 from pymarkdown.tokens.markdown_token import MarkdownToken
 from pymarkdown.tokens.raw_html_markdown_token import RawHtmlMarkdownToken
+from pymarkdown.tokens.text_markdown_token import TextMarkdownToken
 from pymarkdown.tokens.uri_autolink_markdown_token import UriAutolinkMarkdownToken
 
 POGGER = ParserLogger(logging.getLogger(__name__))
@@ -35,10 +40,43 @@ class InlineAutoLinkHelper:
     """
 
     @staticmethod
-    def handle_angle_brackets(inline_request: InlineRequest) -> InlineResponse:
+    def __handle_raw_html(
+        between_brackets: str,
+        remaining_line: str,
+        inline_request: InlineRequest,
+        new_column_number: int,
+        closing_angle_index: int,
+    ) -> Tuple[Optional[Union[RawHtmlMarkdownToken, TextMarkdownToken]], str, int]:
+        assert (
+            inline_request.line_number is not None
+        ), "Request line number cannot be None."
+        new_token, after_index = HtmlRawHelper.parse_raw_html(
+            between_brackets,
+            remaining_line,
+            inline_request.line_number,
+            new_column_number,
+            inline_request,
+        )
+        if after_index != -1:
+            assert (
+                new_token is not None
+            ), "If after_index is valid, new_token must also be valid."
+            closing_angle_index = after_index + inline_request.next_index + 1
+            if new_token.is_inline_raw_html:
+                html_token = cast(RawHtmlMarkdownToken, new_token)
+                between_brackets = html_token.raw_tag
+            else:
+                between_brackets = between_brackets
+        return new_token, between_brackets, closing_angle_index
+
+    @staticmethod
+    def handle_angle_brackets(
+        parser_properties: ParseBlockPassProperties, inline_request: InlineRequest
+    ) -> InlineResponse:
         """
         Given an open angle bracket, determine which of the three possibilities it is.
         """
+        _ = parser_properties
         closing_angle_index = inline_request.source_text.find(
             InlineAutoLinkHelper.__angle_bracket_end, inline_request.next_index
         )
@@ -51,34 +89,36 @@ class InlineAutoLinkHelper:
             )
             closing_angle_index += 1
 
-            assert inline_request.line_number is not None
-            assert inline_request.column_number is not None
-            assert inline_request.remaining_line is not None
+            assert (
+                inline_request.line_number is not None
+                and inline_request.column_number is not None
+                and inline_request.remaining_line is not None
+            ), "Proper processing must leave these in a valid state."
             new_column_number = inline_request.column_number + len(
                 inline_request.remaining_line
             )
 
-            new_token: Optional[
-                MarkdownToken
-            ] = InlineAutoLinkHelper.__parse_valid_uri_autolink(
-                between_brackets, inline_request.line_number, new_column_number
+            new_token: Optional[MarkdownToken] = (
+                InlineAutoLinkHelper.__parse_valid_uri_autolink(
+                    between_brackets, inline_request.line_number, new_column_number
+                )
             )
             if not new_token:
                 new_token = InlineAutoLinkHelper.__parse_valid_email_autolink(
                     between_brackets, inline_request.line_number, new_column_number
                 )
             if not new_token:
-                new_token, after_index = HtmlRawHelper.parse_raw_html(
+                (
+                    new_token,
+                    between_brackets,
+                    closing_angle_index,
+                ) = InlineAutoLinkHelper.__handle_raw_html(
                     between_brackets,
                     remaining_line,
-                    inline_request.line_number,
-                    new_column_number,
                     inline_request,
+                    new_column_number,
+                    closing_angle_index,
                 )
-                if after_index != -1:
-                    closing_angle_index = after_index + inline_request.next_index + 1
-                    html_token = cast(RawHtmlMarkdownToken, new_token)
-                    between_brackets = html_token.raw_tag
         else:
             new_token, between_brackets = None, None
 
@@ -133,10 +173,11 @@ class InlineAutoLinkHelper:
             InlineAutoLinkHelper.angle_bracket_start not in text_to_parse
             and text_to_parse[0] in string.ascii_letters
         ):
-            path_index, uri_scheme = ParserHelper.collect_while_one_of_characters(
-                text_to_parse, 1, InlineAutoLinkHelper.__valid_scheme_characters
+            path_index, uri_scheme = (
+                ParserHelper.collect_while_one_of_characters_verified(
+                    text_to_parse, 1, InlineAutoLinkHelper.__valid_scheme_characters
+                )
             )
-            assert path_index is not None
             uri_scheme, text_to_parse_size = f"{text_to_parse[0]}{uri_scheme}", len(
                 text_to_parse
             )

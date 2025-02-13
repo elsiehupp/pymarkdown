@@ -1,5 +1,7 @@
 # Developer Documentation
 
+[TBD: add description of how to write new plugin]
+
 This document is provided to help developers extend the PyMarkdown project to
 solve their immediate needs.  This is meant to be an evolving document, growing
 with the needs of any developers who want to help out with the project or
@@ -137,3 +139,121 @@ next_line
 report_next_line_error
 
 completed_file
+
+## Fix Conflict Checks
+
+MD001 & md003 - Md003 is not fixable
+MD004 & md006 - `mix_md004_md006` - duplicate of inverse - disabled by default
+      & md007 - `mix_md004_md007` - check
+      & md032 - `mix_md004_md032` - future
+MD005 & md007 `mix_md005_md007`
+      & md023 - from below
+      & md027 - `mix_md005_md007`
+      & md029 - `mix_md005_md029`
+      & md030 - `mix_md005_md030`
+      & md033 - safe
+MD007 & md004 - `mix_md007_md004`
+      & md005 - `mix_md007_md005`
+      & md027 - `mix_md007_md027`
+      & md030 - `mix_md007_md030`
+md009 & md012 - future
+      & md023 - `mix_md009_md023` - check -> 009, 0027, 023
+      & md027 - `mix_md009_md027` - duplicate of inverse
+      & md033 - future
+MD010 & md019 - `mix_md010_md019` - duplicate of inverse
+      & md021 - `mix_md010_md021` - duplicate of inverse
+      & md022 - safe
+      & md030 - `mix_md010_md030`
+      & md031 - safe
+      & md040 - safe
+      & md047 - `mix_md010_md047`
+MD019 & md010 - `mix_md019_md010` - duplicate of inverse
+      & md023 - `mix_md019_md023` - check
+      & md047 - `mix_md019_md047` - double check, not required
+MD021 & md010 - `mix_md021_md010` - check
+MD023 & md005 - up
+      & md009 - `mix_md023_md009` - duplicate of inverse
+      & md019 - `mix_md023_md019` - duplicate of inverse
+      & md022 - safe
+      & md027 - `mix_md023_md027`
+      & md030 - `mix_md023_md030`
+      & md032 - safe
+MD027 & md003 - safe
+      & md005 - `mix_md027_md005`
+      & md007 - `mix_md027_md007` - check
+      & md009 - `mix_md027_md009`
+      & md012 - safe
+      & md013 - safe
+      & md022 - safe
+      & md023 - `mix_md027_md023`
+      & md028 - safe
+      & md030 - `mix_md027_md030`
+      & md031 - safe
+      & md032 - safe
+MD029 & md030 - `mix_md029_md005`
+MD030 & md005 - `mix_md030_md005`
+      & md007 - `mix_md030_md007` - check
+      & md010 - `mix_md030_md010`
+      & md027 - `mix_md030_md027`
+      & md030 - `mix_md030_md023`
+MD035 - none
+MD037 - none
+MD039 - none
+MD047 & md010 - `mix_md047_md010` - double check
+      & md019 - `mix_md047_md019` - double check
+MD048 - none
+
+MD006 & md004 - `mix_md006_md004` up            (disabled by default)
+        md007                 (disabled by default)
+        md027                 (disabled by default)
+
+possible -> MD005, Md007
+possible -> MD019/MD021, MD023
+possible -> md027 19/21/23/05/07 when blanks inside of list
+         -> mod027 and most others
+
+MD009 line -> no trailing spaces
+MD010 line -> detabify
+MD047 line -> adds newline to end
+
+Md001 Atx/SetExt                                def   hash_count
+MD004 UnorderedListStartMarkdownToken           def   list_start_sequence
+Md005 NewListItemMarkdownToken                  2     indent_level, extracted_whitespace
+      UnorderedListStartMarkdownToken           def   indent_level, extracted_whitespace, column_number, leading_spaces
+      OrderedListStartMarkdownToken                   indent_level, extracted_whitespace, column_number, leading_spaces
+MD006(d) NewListItemMarkdownToken               def   indent_level, extracted_whitespace
+      UnorderedListStartMarkdownToken                 indent_level, extracted_whitespace
+MD007 NewListItemMarkdownToken                  3     indent_level, extracted_whitespace
+      UnorderedListStartMarkdownToken                 indent_level, extracted_whitespace
+MD019 AtxHeadingMarkdownToken                   def   extracted_whitespace
+MD021 AtxHeadingMarkdownToken                   def   extracted_whitespace, extra_end_data
+MD023 AtxHeadingMarkdownToken                   def   extracted_whitespace
+MD029 OrderedListStartMarkdownToken             def   list_start_content
+md030 ListStartMArkdownToken                    def   indent_level
+MD035 ThematicBreakMarkdownToken                def   start_character,rest_of_line
+MD037 TextMarkdownToken (within emphasis)       def   token_text
+MD038 InlineCodeSpanMarkdownToken               def   span_text
+MD039 LinkStartMarkdownToken                    def   text_from_blocks
+      ImageStartMarkdownToken
+MD044 TextMarkdownToken                         def   token_text
+      InlineCodeSpanMarkdownToken                     span_text
+      LinkReferenceDefinitionMarkdownToken            link_name, link_name_debug, link_title_raw, link_title
+      LinkStartMarkdownToken                          link_title, pre_link_title, text_from_blocks
+MD048 FencedCodeBlockMarkdownToken              def   fence_character
+
+MD027 BlankLineMarkdownToken                    5     extracted_whitespace
+      ParagraphMarkdownToken                          extracted_whitespace
+      EndToken                                        extracted_whitespace
+        SetExt
+        them
+        fenc
+        atx
+        lrd
+        Text end_whitespace
+      NewListItemMarkdownToken            indent_level, extracted_whitespace
+      UnorderedListStartMarkdownToken     indent_level, extracted_whitespace, column_number, leading_spaces
+      OrderedListStartMarkdownToken       indent_level, extracted_whitespace, column_number, leading_spaces
+
+Md046 FencedCodeBlockMarkdownToken        replacement
+      TextMarkdownToken                   replacement
+      IndentedCodeBlockMarkdownToken      replacement

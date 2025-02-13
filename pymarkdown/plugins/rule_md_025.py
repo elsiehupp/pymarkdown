@@ -1,10 +1,15 @@
 """
 Module to implement a plugin that looks for multiple top level headings.
 """
-from typing import cast
+
+from typing import List, cast
 
 from pymarkdown.extensions.front_matter_markdown_token import FrontMatterMarkdownToken
-from pymarkdown.plugin_manager.plugin_details import PluginDetails
+from pymarkdown.plugin_manager.plugin_details import (
+    PluginDetails,
+    PluginDetailsV3,
+    QueryConfigItem,
+)
 from pymarkdown.plugin_manager.plugin_scan_context import PluginScanContext
 from pymarkdown.plugin_manager.rule_plugin import RulePlugin
 from pymarkdown.tokens.atx_heading_markdown_token import AtxHeadingMarkdownToken
@@ -26,14 +31,13 @@ class RuleMd025(RulePlugin):
         """
         Get the details for the plugin.
         """
-        return PluginDetails(
+        return PluginDetailsV3(
             plugin_name="single-title,single-h1",
             plugin_id="MD025",
             plugin_enabled_by_default=True,
             plugin_description="Multiple top-level headings in the same document",
-            plugin_version="0.5.0",
-            plugin_interface_version=1,
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md025.md",
+            plugin_version="0.6.0",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md025.md",
             plugin_configuration="level, front_matter_title",
         )
 
@@ -44,7 +48,7 @@ class RuleMd025(RulePlugin):
 
     @classmethod
     def __validate_configuration_title(cls, found_value: str) -> None:
-        found_value = found_value.strip()
+        found_value = found_value.strip(" ")
         if not found_value:
             raise ValueError("Empty strings are not allowable values.")
         if ":" in found_value:
@@ -64,6 +68,15 @@ class RuleMd025(RulePlugin):
             default_value="title",
             valid_value_fn=self.__validate_configuration_title,
         ).lower()
+
+    def query_config(self) -> List[QueryConfigItem]:
+        """
+        Query to find out the configuration that the rule is using.
+        """
+        return [
+            QueryConfigItem("level", self.__level),
+            QueryConfigItem("front_matter_title", self.__front_matter_title),
+        ]
 
     def starting_new_file(self) -> None:
         """

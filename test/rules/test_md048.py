@@ -1,393 +1,251 @@
 """
 Module to provide tests related to the MD048 rule.
 """
+
 import os
-from test.markdown_scanner import MarkdownScanner
+from test.rules.utils import (
+    calculate_fix_tests,
+    execute_configuration_test,
+    execute_fix_test,
+    execute_query_configuration_test,
+    execute_scan_test,
+    id_test_plug_rule_fn,
+    pluginConfigErrorTest,
+    pluginQueryConfigTest,
+    pluginRuleTest,
+)
 
 import pytest
 
+source_path = os.path.join("test", "resources", "rules", "md048") + os.sep
 
-@pytest.mark.rules
-def test_md048_bad_configuration_style():
+configTests = [
+    pluginConfigErrorTest(
+        "invalid_style_type",
+        use_strict_config=True,
+        set_args=["plugins.md048.style=$#1"],
+        expected_error="""BadPluginError encountered while configuring plugins:
+The value for property 'plugins.md048.style' must be of type 'str'.""",
+    ),
+    pluginConfigErrorTest(
+        "invalid_style",
+        use_strict_config=True,
+        set_args=["plugins.md048.style=not-matching"],
+        expected_error="""BadPluginError encountered while configuring plugins:
+The value for property 'plugins.md048.style' is not valid: Allowable values: ['consistent', 'tilde', 'backtick']""",
+    ),
+]
+
+
+scanTests = [
+    pluginRuleTest(
+        "good_fenced_tildes_with_consistent",
+        source_file_name=f"{source_path}good_fenced_tildes.md",
+        set_args=["plugins.md048.style=consistent"],
+    ),
+    pluginRuleTest(
+        "good_fenced_backticks_with_consistent",
+        source_file_name=f"{source_path}good_fenced_backticks.md",
+        set_args=["plugins.md048.style=consistent"],
+    ),
+    pluginRuleTest(
+        "bad_fenced_backticks_and_tildes_with_consistent",
+        source_file_name=f"{source_path}bad_fenced_backticks_and_tildes.md",
+        set_args=["plugins.md048.style=consistent"],
+        source_file_contents="""```Python
+def test():
+    print("test")
+```
+
+~~~Python
+def test():
+    print("test")
+~~~
+""",
+        scan_expected_return_code=1,
+        scan_expected_output="""{temp_source_path}:6:1: MD048: Code fence style [Expected: backtick; Actual: tilde] (code-fence-style)
+""",
+        fix_expected_file_contents="""```Python
+def test():
+    print("test")
+```
+
+```Python
+def test():
+    print("test")
+```
+""",
+    ),
+    pluginRuleTest(
+        "good_fenced_backticks_with_backticks",
+        source_file_name=f"{source_path}good_fenced_backticks.md",
+        set_args=["plugins.md048.style=backtick"],
+    ),
+    pluginRuleTest(
+        "bad_fenced_tildes_with_backticks",
+        source_file_name=f"{source_path}good_fenced_tildes.md",
+        set_args=["plugins.md048.style=backtick"],
+        source_file_contents="""~~~Python
+def test():
+    print("test")
+~~~
+
+~~~Python
+def test():
+    print("test")
+~~~
+""",
+        scan_expected_return_code=1,
+        scan_expected_output="""{temp_source_path}:1:1: MD048: Code fence style [Expected: backtick; Actual: tilde] (code-fence-style)
+{temp_source_path}:6:1: MD048: Code fence style [Expected: backtick; Actual: tilde] (code-fence-style)
+""",
+        fix_expected_file_contents="""```Python
+def test():
+    print("test")
+```
+
+```Python
+def test():
+    print("test")
+```
+""",
+    ),
+    pluginRuleTest(
+        "bad_fenced_backticks_and_tildes_with_backticks",
+        source_file_name=f"{source_path}bad_fenced_backticks_and_tildes.md",
+        set_args=["plugins.md048.style=backtick"],
+        source_file_contents="""```Python
+def test():
+    print("test")
+```
+
+~~~Python
+def test():
+    print("test")
+~~~
+""",
+        scan_expected_return_code=1,
+        scan_expected_output="""{temp_source_path}:6:1: MD048: Code fence style [Expected: backtick; Actual: tilde] (code-fence-style)
+""",
+        fix_expected_file_contents="""```Python
+def test():
+    print("test")
+```
+
+```Python
+def test():
+    print("test")
+```
+""",
+    ),
+    pluginRuleTest(
+        "good_fenced_tildes_with_tilde",
+        source_file_name=f"{source_path}good_fenced_tildes.md",
+        set_args=["plugins.md048.style=tilde"],
+    ),
+    pluginRuleTest(
+        "bad_fenced_backticks_with_tilde",
+        source_file_name=f"{source_path}good_fenced_backticks.md",
+        set_args=["plugins.md048.style=tilde"],
+        source_file_contents="""```Python
+def test():
+    print("test")
+```
+
+```Python
+def test():
+    print("test")
+```
+""",
+        scan_expected_return_code=1,
+        scan_expected_output="""{temp_source_path}:1:1: MD048: Code fence style [Expected: tilde; Actual: backtick] (code-fence-style)
+{temp_source_path}:6:1: MD048: Code fence style [Expected: tilde; Actual: backtick] (code-fence-style)
+""",
+        fix_expected_file_contents="""~~~Python
+def test():
+    print("test")
+~~~
+
+~~~Python
+def test():
+    print("test")
+~~~
+""",
+    ),
+    pluginRuleTest(
+        "bad_fenced_backticks_and_tildes_with_indented",
+        source_file_name=f"{source_path}bad_fenced_backticks_and_tildes.md",
+        set_args=["plugins.md048.style=tilde"],
+        source_file_contents="""```Python
+def test():
+    print("test")
+```
+
+~~~Python
+def test():
+    print("test")
+~~~
+""",
+        scan_expected_return_code=1,
+        scan_expected_output="""{temp_source_path}:1:1: MD048: Code fence style [Expected: tilde; Actual: backtick] (code-fence-style)
+""",
+        fix_expected_file_contents="""~~~Python
+def test():
+    print("test")
+~~~
+
+~~~Python
+def test():
+    print("test")
+~~~
+""",
+    ),
+]
+
+
+@pytest.mark.parametrize("test", scanTests, ids=id_test_plug_rule_fn)
+def test_md048_scan(test: pluginRuleTest) -> None:
     """
-    Test to verify that a configuration error is thrown when supplying the
-    style value with an integer that is not a string.
+    Execute a parameterized scan test for plugin md001.
     """
-
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "good_both_tildes.md"
-    )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=$#1",
-        "--strict-config",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 1
-    expected_output = ""
-    expected_error = (
-        "BadPluginError encountered while configuring plugins:\n"
-        + "The value for property 'plugins.md048.style' must be of type 'str'."
-    )
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
+    execute_scan_test(test, "md048")
 
 
-@pytest.mark.rules
-def test_md048_bad_configuration_style_bad():
+@pytest.mark.parametrize(
+    "test", calculate_fix_tests(scanTests), ids=id_test_plug_rule_fn
+)
+def test_md048_fix(test: pluginRuleTest) -> None:
     """
-    Test to verify that a configuration error is thrown when supplying the
-    style value with a string that is not valid.
+    Execute a parameterized fix test for plugin md001.
     """
-
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "good_both_tildes.md"
-    )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=not-matching",
-        "--strict-config",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 1
-    expected_output = ""
-    expected_error = (
-        "BadPluginError encountered while configuring plugins:\n"
-        + "The value for property 'plugins.md048.style' is not valid: Allowable values: ['consistent', 'tilde', 'backtick']"
-    )
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
+    execute_fix_test(test)
 
 
-@pytest.mark.rules
-def test_md048_good_fenced_tildes_with_consistent():
+@pytest.mark.parametrize("test", configTests, ids=id_test_plug_rule_fn)
+def test_md048_config(test: pluginRuleTest) -> None:
     """
-    Test to make sure this rule does not trigger with a document that
-    contains fenced code blocks with tildes and consistent configuration.
+    Execute a parameterized fix test for plugin md001.
     """
+    execute_configuration_test(test, f"{source_path}bad_fenced_backticks_and_tildes.md")
 
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "good_fenced_tildes.md"
+
+def test_md048_query_config():
+    config_test = pluginQueryConfigTest(
+        "md048",
+        """
+  ITEM               DESCRIPTION
+
+  Id                 md048
+  Name(s)            code-fence-style
+  Short Description  Code fence style
+  Description Url    https://pymarkdown.readthedocs.io/en/latest/plugins/rule_
+                     md048.md
+
+
+  CONFIGURATION ITEM  TYPE    VALUE
+
+  style               string  "consistent"
+
+""",
     )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=consistent",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 0
-    expected_output = ""
-    expected_error = ""
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
-
-
-@pytest.mark.rules
-def test_md048_good_fenced_backticks_with_consistent():
-    """
-    Test to make sure this rule does not trigger with a document that
-    contains fenced code blocks with backticks and consistent configuration.
-    """
-
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "good_fenced_backticks.md"
-    )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=consistent",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 0
-    expected_output = ""
-    expected_error = ""
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
-
-
-@pytest.mark.rules
-def test_md048_bad_fenced_backticks_and_tildes_with_consistent():
-    """
-    Test to make sure this rule does trigger with a document that
-    contains fenced code blocks with tildes and backticks and consistent configuration.
-    """
-
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "bad_fenced_backticks_and_tildes.md"
-    )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=consistent",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 1
-    expected_output = (
-        f"{source_path}:6:1: "
-        + "MD048: Code fence style "
-        + "[Expected: backtick; Actual: tilde] (code-fence-style)"
-    )
-    expected_error = ""
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
-
-
-@pytest.mark.rules
-def test_md048_good_fenced_backticks_with_backticks():
-    """
-    Test to make sure this rule does not trigger with a document that
-    contains fenced code blocks with backticks and backtick configuration.
-    """
-
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "good_fenced_backticks.md"
-    )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=backtick",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 0
-    expected_output = ""
-    expected_error = ""
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
-
-
-@pytest.mark.rules
-def test_md048_good_fenced_tildes_with_backticks():
-    """
-    Test to make sure this rule does trigger with a document that
-    contains fenced code blocks with backticks and tilde configuration.
-    """
-
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "good_fenced_tildes.md"
-    )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=backtick",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 1
-    expected_output = (
-        f"{source_path}:1:1: "
-        + "MD048: Code fence style "
-        + "[Expected: backtick; Actual: tilde] (code-fence-style)\n"
-        + f"{source_path}:6:1: "
-        + "MD048: Code fence style "
-        + "[Expected: backtick; Actual: tilde] (code-fence-style)"
-    )
-    expected_error = ""
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
-
-
-@pytest.mark.rules
-def test_md048_bad_fenced_backticks_and_tildes_with_backticks():
-    """
-    Test to make sure this rule does not trigger with a document that
-    contains fenced code blocks with backticks and tildes and backtick configuration.
-    """
-
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "bad_fenced_backticks_and_tildes.md"
-    )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=backtick",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 1
-    expected_output = (
-        f"{source_path}:6:1: "
-        + "MD048: Code fence style "
-        + "[Expected: backtick; Actual: tilde] (code-fence-style)"
-    )
-    expected_error = ""
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
-
-
-@pytest.mark.rules
-def test_md048_good_fenced_tildes_with_tilde():
-    """
-    Test to make sure this rule does not trigger with a document that
-    contains fenced code blocks with tildes and tilde configuration.
-    """
-
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "good_fenced_tildes.md"
-    )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=tilde",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 0
-    expected_output = ""
-    expected_error = ""
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
-
-
-@pytest.mark.rules
-def test_md048_good_fenced_backticks_with_tilde():
-    """
-    Test to make sure this rule does not trigger with a document that
-    contains fenced code blocks with backticks and tilde configuration.
-    """
-
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "good_fenced_backticks.md"
-    )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=tilde",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 1
-    expected_output = (
-        f"{source_path}:1:1: "
-        + "MD048: Code fence style "
-        + "[Expected: tilde; Actual: backtick] (code-fence-style)\n"
-        + f"{source_path}:6:1: "
-        + "MD048: Code fence style "
-        + "[Expected: tilde; Actual: backtick] (code-fence-style)"
-    )
-    expected_error = ""
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
-
-
-@pytest.mark.rules
-def test_md048_bad_fenced_backticks_and_tildes_with_indented():
-    """
-    Test to make sure this rule does trigger with a document that
-    contains fenced code blocks with backticks and tildes and tilde configuration.
-    """
-
-    # Arrange
-    scanner = MarkdownScanner()
-    source_path = os.path.join(
-        "test", "resources", "rules", "md048", "bad_fenced_backticks_and_tildes.md"
-    )
-    supplied_arguments = [
-        "--set",
-        "plugins.md048.style=tilde",
-        "scan",
-        source_path,
-    ]
-
-    expected_return_code = 1
-    expected_output = (
-        f"{source_path}:1:1: "
-        + "MD048: Code fence style "
-        + "[Expected: tilde; Actual: backtick] (code-fence-style)"
-    )
-    expected_error = ""
-
-    # Act
-    execute_results = scanner.invoke_main(arguments=supplied_arguments)
-
-    # Assert
-    execute_results.assert_results(
-        expected_output, expected_error, expected_return_code
-    )
+    execute_query_configuration_test(config_test)

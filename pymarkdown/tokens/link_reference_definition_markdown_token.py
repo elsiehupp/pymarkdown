@@ -3,7 +3,9 @@ Module to provide for an encapsulation of the link reference definition element.
 """
 
 # pylint: disable=too-many-instance-attributes
-from typing import List, Optional, cast
+from typing import List, Optional, Union, cast
+
+from typing_extensions import override
 
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.position_marker import PositionMarker
@@ -54,29 +56,31 @@ class LinkReferenceDefinitionMarkdownToken(LeafMarkdownToken):
                 self.__link_title_raw,
                 self.__end_whitespace,
             ) = (
-                ""
-                if link_debug.collected_destination == self.__link_name
-                else link_debug.collected_destination,
+                (
+                    ""
+                    if link_debug.collected_destination == self.__link_name
+                    else link_debug.collected_destination
+                ),
                 link_debug.line_destination_whitespace,
-                ""
-                if link_debug.inline_raw_link == self.__link_destination
-                else link_debug.inline_raw_link,
+                (
+                    ""
+                    if link_debug.inline_raw_link == self.__link_destination
+                    else link_debug.inline_raw_link
+                ),
                 link_debug.line_title_whitespace,
-                ""
-                if link_debug.inline_raw_title == self.__link_title
-                else link_debug.inline_raw_title,
+                (
+                    ""
+                    if link_debug.inline_raw_title == self.__link_title
+                    else link_debug.inline_raw_title
+                ),
                 link_debug.end_whitespace,
             )
         else:
-            # TODO do this better.
-            (
-                self.__link_name_debug,
-                self.__link_destination_whitespace,
-                self.__link_destination_raw,
-                self.__link_title_whitespace,
-                self.__link_title_raw,
-                self.__end_whitespace,
-            ) = ("", "", "", "", "", "")
+            self.__link_name_debug = self.__link_destination_whitespace = (
+                self.__link_destination_raw
+            ) = self.__link_title_whitespace = self.__link_title_raw = (
+                self.__end_whitespace
+            ) = ""
 
         extra_data = self.__validate_proper_fields_are_valid(extracted_whitespace)
         LeafMarkdownToken.__init__(
@@ -98,14 +102,16 @@ class LinkReferenceDefinitionMarkdownToken(LeafMarkdownToken):
     # pylint: enable=protected-access
 
     def __validate_proper_fields_are_valid(self, extracted_whitespace: str) -> str:
-        assert self.__end_whitespace is not None
-        assert self.__link_title_raw is not None
-        assert self.__link_title is not None
-        assert self.__link_title_whitespace is not None
-        assert self.__link_destination_raw is not None
-        assert self.__link_destination is not None
-        assert self.__link_destination_whitespace is not None
-        assert self.__link_name_debug is not None
+        assert self.__end_whitespace is not None, "This field should be defined."
+        assert self.__link_title_raw is not None, "This field should be defined."
+        assert self.__link_title is not None, "This field should be defined."
+        assert self.__link_title_whitespace is not None, "This field should be defined."
+        assert self.__link_destination_raw is not None, "This field should be defined."
+        assert self.__link_destination is not None, "This field should be defined."
+        assert (
+            self.__link_destination_whitespace is not None
+        ), "This field should be defined."
+        assert self.__link_name_debug is not None, "This field should be defined."
         return MarkdownToken.extra_data_separator.join(
             [
                 str(self.did_add_definition),
@@ -193,6 +199,55 @@ class LinkReferenceDefinitionMarkdownToken(LeafMarkdownToken):
         """
         return self.__link_title_whitespace
 
+    # pylint: disable=too-many-return-statements
+    @override
+    def _modify_token(self, field_name: str, field_value: Union[str, int]) -> bool:
+        if field_name == "link_destination_whitespace" and isinstance(field_value, str):
+            self.__link_destination_whitespace = field_value
+            extra_data = self.__validate_proper_fields_are_valid(
+                self.extracted_whitespace
+            )
+            super()._set_extra_data(extra_data)
+            return True
+        if field_name == "link_title_whitespace" and isinstance(field_value, str):
+            self.__link_title_whitespace = field_value
+            extra_data = self.__validate_proper_fields_are_valid(
+                self.extracted_whitespace
+            )
+            super()._set_extra_data(extra_data)
+            return True
+        if field_name == "link_name" and isinstance(field_value, str):
+            self.__link_name = field_value
+            extra_data = self.__validate_proper_fields_are_valid(
+                self.extracted_whitespace
+            )
+            super()._set_extra_data(extra_data)
+            return True
+        if field_name == "link_name_debug" and isinstance(field_value, str):
+            self.__link_name_debug = field_value
+            extra_data = self.__validate_proper_fields_are_valid(
+                self.extracted_whitespace
+            )
+            super()._set_extra_data(extra_data)
+            return True
+        if field_name == "link_title" and isinstance(field_value, str):
+            self.__link_title = field_value
+            extra_data = self.__validate_proper_fields_are_valid(
+                self.extracted_whitespace
+            )
+            super()._set_extra_data(extra_data)
+            return True
+        if field_name == "link_title_raw" and isinstance(field_value, str):
+            self.__link_title_raw = field_value
+            extra_data = self.__validate_proper_fields_are_valid(
+                self.extracted_whitespace
+            )
+            super()._set_extra_data(extra_data)
+            return True
+        return super()._modify_token(field_name, field_value)
+
+    # pylint: enable=too-many-return-statements
+
     def register_for_markdown_transform(
         self, registration_function: RegisterMarkdownTransformHandlersProtocol
     ) -> None:
@@ -223,11 +278,17 @@ class LinkReferenceDefinitionMarkdownToken(LeafMarkdownToken):
         link_destination_text = (
             current_lrd_token.link_destination_raw or current_lrd_token.link_destination
         )
-        assert current_lrd_token.link_destination_whitespace is not None
-        assert link_destination_text is not None
-        assert current_lrd_token.link_title_whitespace is not None
-        assert link_title_text is not None
-        assert current_lrd_token.end_whitespace is not None
+        assert (
+            current_lrd_token.link_destination_whitespace is not None
+        ), "This field should be defined."
+        assert link_destination_text is not None, "This field should be defined."
+        assert (
+            current_lrd_token.link_title_whitespace is not None
+        ), "This field should be defined."
+        assert link_title_text is not None, "This field should be defined."
+        assert (
+            current_lrd_token.end_whitespace is not None
+        ), "This field should be defined."
         link_def_parts: List[str] = [
             current_lrd_token.extracted_whitespace,
             "[",

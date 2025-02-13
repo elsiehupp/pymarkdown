@@ -2,9 +2,14 @@
 Module to implement a plugin that ensures that Ordered List Items have
 consistent numeric prefaces.
 """
+
 from typing import List, Optional, Tuple, cast
 
-from pymarkdown.plugin_manager.plugin_details import PluginDetails
+from pymarkdown.plugin_manager.plugin_details import (
+    PluginDetailsV2,
+    PluginDetailsV3,
+    QueryConfigItem,
+)
 from pymarkdown.plugin_manager.plugin_scan_context import PluginScanContext
 from pymarkdown.plugin_manager.rule_plugin import RulePlugin
 from pymarkdown.tokens.list_start_markdown_token import ListStartMarkdownToken
@@ -32,22 +37,23 @@ class RuleMd029(RulePlugin):
     def __init__(self) -> None:
         super().__init__()
         self.__style = ""
+        self.__allow_extended_start_values = False
         self.__list_stack: List[MarkdownToken] = []
         self.__ordered_list_stack: List[Tuple[Optional[str], Optional[int]]] = []
 
-    def get_details(self) -> PluginDetails:
+    def get_details(self) -> PluginDetailsV2:
         """
         Get the details for the plugin.
         """
-        return PluginDetails(
+        return PluginDetailsV3(
             plugin_name="ol-prefix",
             plugin_id="MD029",
             plugin_enabled_by_default=True,
             plugin_description="Ordered list item prefix",
-            plugin_version="0.5.0",
-            plugin_interface_version=1,
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md029.md",
-            plugin_configuration="style",
+            plugin_version="0.6.0",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md029.md",
+            plugin_configuration="style,allow_extended_start_values",
+            plugin_supports_fix=True,
         )
 
     @classmethod
@@ -64,6 +70,24 @@ class RuleMd029(RulePlugin):
             default_value=RuleMd029.__one_or_ordered_style,
             valid_value_fn=self.__validate_configuration_style,
         )
+        self.__allow_extended_start_values = (
+            self.plugin_configuration.get_boolean_property(
+                "allow_extended_start_values", default_value=False
+            )
+        )
+
+        # add optional to allow non- 0-1 start for ordered
+
+    def query_config(self) -> List[QueryConfigItem]:
+        """
+        Query to find out the configuration that the rule is using.
+        """
+        return [
+            QueryConfigItem("style", self.__style),
+            QueryConfigItem(
+                "allow_extended_start_values", self.__allow_extended_start_values
+            ),
+        ]
 
     def starting_new_file(self) -> None:
         """
@@ -72,39 +96,52 @@ class RuleMd029(RulePlugin):
         self.__list_stack = []
         self.__ordered_list_stack = []
 
+    def __calculate_match_info(
+        self, list_style: str, initial: bool, last_known_number: Optional[int]
+    ) -> Tuple[str, int]:
+        if list_style == RuleMd029.__ordered_style:
+            style = "1/2/3"
+            if initial:
+                expected_number = 1
+            else:
+                assert last_known_number is not None
+                expected_number = last_known_number + 1
+        elif list_style == RuleMd029.__one_style:
+            style = "1/1/1"
+            expected_number = 1
+        else:
+            assert list_style == RuleMd029.__zero_style
+            style = "0/0/0"
+            expected_number = 0
+        return style, expected_number
+
     def __match_first_item(
         self, context: PluginScanContext, token: MarkdownToken
     ) -> Tuple[Optional[str], Optional[int]]:
         list_token = cast(ListStartMarkdownToken, token)
-        list_style: Optional[str] = self.__style
-        last_known_number: Optional[int] = int(list_token.list_start_content)
+        last_known_number: int = int(list_token.list_start_content)
 
-        if list_style == RuleMd029.__one_or_ordered_style and last_known_number != 1:
-            list_style = RuleMd029.__ordered_style
-
-        is_valid = True
+        list_style = (
+            RuleMd029.__ordered_style
+            if self.__style == RuleMd029.__one_or_ordered_style
+            and last_known_number != 1
+            else self.__style
+        )
         if list_style == RuleMd029.__ordered_style:
-            is_valid = last_known_number in {0, 1}
+            is_valid = self.__allow_extended_start_values or last_known_number in {0, 1}
         elif list_style == RuleMd029.__one_style:
             is_valid = last_known_number == 1
         elif list_style == RuleMd029.__zero_style:
             is_valid = last_known_number == 0
+        else:
+            is_valid = True
         # print(f"list_style={list_style},last_known_number={last_known_number},is_valid={is_valid}")
-        if not is_valid:
-            if list_style == RuleMd029.__ordered_style:
-                style = "1/2/3"
-            elif list_style == RuleMd029.__one_style:
-                style = "1/1/1"
-            else:
-                assert list_style == RuleMd029.__zero_style
-                style = "0/0/0"
-            expected_number = 0 if list_style == RuleMd029.__zero_style else 1
-            extra_error_information = f"Expected: {expected_number}; Actual: {last_known_number}; Style: {style}"
-            self.report_next_token_error(
-                context, token, extra_error_information=extra_error_information
-            )
-            list_style, last_known_number = (None, None)
-        return list_style, last_known_number
+        if is_valid:
+            return list_style, last_known_number
+
+        return self.__report_invalid(
+            context, list_token, True, list_style, last_known_number, None
+        )
 
     def __match_non_first_items(
         self,
@@ -115,7 +152,8 @@ class RuleMd029(RulePlugin):
     ) -> Tuple[Optional[str], Optional[int]]:
         if list_style:
             list_token = cast(ListStartMarkdownToken, token)
-            new_number: Optional[int] = int(list_token.list_start_content)
+            new_number: int = int(list_token.list_start_content)
+
             # print(f"list_style={list_style},last_known_number={last_known_number},new_number={new_number}")
             if list_style == RuleMd029.__one_or_ordered_style:
                 list_style = (
@@ -124,7 +162,7 @@ class RuleMd029(RulePlugin):
                     else RuleMd029.__ordered_style
                 )
 
-            is_valid = False
+            # is_valid = False
             if list_style == RuleMd029.__one_style:
                 is_valid = new_number == 1
             elif list_style == RuleMd029.__zero_style:
@@ -134,26 +172,60 @@ class RuleMd029(RulePlugin):
                 assert last_known_number is not None
                 is_valid = new_number == last_known_number + 1
             if not is_valid:
-                if list_style == RuleMd029.__ordered_style:
-                    style = "1/2/3"
-                    assert last_known_number is not None
-                    expected_number = last_known_number + 1
-                elif list_style == RuleMd029.__one_style:
-                    style = "1/1/1"
-                    expected_number = 1
-                else:
-                    assert list_style == RuleMd029.__zero_style
-                    style = "0/0/0"
-                    expected_number = 0
-                extra_error_information = (
-                    f"Expected: {expected_number}; Actual: {new_number}; Style: {style}"
+                return self.__report_invalid(
+                    context,
+                    list_token,
+                    False,
+                    list_style,
+                    last_known_number,
+                    new_number,
                 )
-                self.report_next_token_error(
-                    context, token, extra_error_information=extra_error_information
-                )
-                list_style, new_number = (None, None)
             last_known_number = new_number
         return list_style, last_known_number
+
+    # pylint: disable=too-many-arguments
+    def __report_invalid(
+        self,
+        context: PluginScanContext,
+        token: ListStartMarkdownToken,
+        initial_match: bool,
+        list_style: str,
+        last_known_number: Optional[int],
+        new_number: Optional[int],
+    ) -> Tuple[Optional[str], Optional[int]]:
+        style, expected_number = self.__calculate_match_info(
+            list_style, initial_match, last_known_number
+        )
+        actual_number = last_known_number if new_number is None else new_number
+        extra_error_information = (
+            f"Expected: {expected_number}; Actual: {actual_number}; Style: {style}"
+        )
+        if context.in_fix_mode:
+            self.register_fix_token_request(
+                context,
+                token,
+                "next_token",
+                "list_start_content",
+                str(expected_number),
+            )
+            if not initial_match and new_number is not None:
+                expected_number_as_string = str(expected_number)
+                new_number_as_string = str(new_number)
+                if delta := len(expected_number_as_string) - len(new_number_as_string):
+                    self.register_fix_token_request(
+                        context,
+                        token,
+                        "next_token",
+                        "indent_level",
+                        token.indent_level + delta,
+                    )
+            return list_style, expected_number
+        self.report_next_token_error(
+            context, token, extra_error_information=extra_error_information
+        )
+        return (None, None)
+
+    # pylint: enable=too-many-arguments
 
     def next_token(self, context: PluginScanContext, token: MarkdownToken) -> None:
         """

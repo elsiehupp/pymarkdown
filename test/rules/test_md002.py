@@ -1,9 +1,11 @@
 """
 Module to provide tests related to the MD002 rule.
 """
+
 import os
 from test.markdown_scanner import MarkdownScanner
-from test.utils import write_temporary_configuration
+from test.rules.utils import execute_query_configuration_test, pluginQueryConfigTest
+from test.utils import create_temporary_configuration_file
 
 import pytest
 
@@ -160,9 +162,9 @@ def test_md002_bad_proper_atx_heading_start_with_alternate_configuration():
     # Arrange
     scanner = MarkdownScanner()
     supplied_configuration = {"plugins": {"md002": {"level": 2}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--enable-rules",
             "MD002",
@@ -187,9 +189,6 @@ def test_md002_bad_proper_atx_heading_start_with_alternate_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -231,9 +230,9 @@ def test_md002_bad_proper_setext_heading_start_with_alternate_configuration():
     # Arrange
     scanner = MarkdownScanner()
     supplied_configuration = {"plugins": {"md002": {"level": 2}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--enable-rules",
             "MD002",
@@ -258,9 +257,6 @@ def test_md002_bad_proper_setext_heading_start_with_alternate_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -306,9 +302,9 @@ def test_md002_good_improper_atx_heading_start_with_alternate_configuration():
     # Arrange
     scanner = MarkdownScanner()
     supplied_configuration = {"plugins": {"md002": {"level": 2}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--enable-rules",
             "MD002",
@@ -329,9 +325,6 @@ def test_md002_good_improper_atx_heading_start_with_alternate_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -379,9 +372,9 @@ def test_md002_good_improper_setext_heading_start_with_alternate_configuration()
     # Arrange
     scanner = MarkdownScanner()
     supplied_configuration = {"plugins": {"md002": {"level": 2}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--disable-rules",
             "MD003",
@@ -404,6 +397,26 @@ def test_md002_good_improper_setext_heading_start_with_alternate_configuration()
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
+
+
+def test_md002_query_config():
+    config_test = pluginQueryConfigTest(
+        "md002",
+        """
+  ITEM               DESCRIPTION
+
+  Id                 md002
+  Name(s)            first-heading-h1,first-header-h1
+  Short Description  First heading of the document should be a top level headi
+                     ng.
+  Description Url    https://pymarkdown.readthedocs.io/en/latest/plugins/rule_
+                     md002.md
+
+
+  CONFIGURATION ITEM  TYPE     VALUE
+
+  level               integer  1
+
+""",
+    )
+    execute_query_configuration_test(config_test)

@@ -1,8 +1,10 @@
 """
 Module to provide tests related to the MD043 rule.
 """
+
 import os
 from test.markdown_scanner import MarkdownScanner
+from test.rules.utils import execute_query_configuration_test, pluginQueryConfigTest
 
 import pytest
 
@@ -235,7 +237,7 @@ def test_md043_bad_configuration_headings_bad_whitespace():
     expected_error = (
         "BadPluginError encountered while configuring plugins:\n"
         + "The value for property 'plugins.md043.headings' is not valid: Heading format not valid: "
-        + "Element must have at least one space character after any hash characters (#)."
+        + "Element must have exactly one space character and one non-space character after any hash characters (#)."
     )
 
     # Act
@@ -274,9 +276,50 @@ def test_md043_bad_configuration_headings_bad_text():
     expected_return_code = 1
     expected_output = ""
     expected_error = (
-        "BadPluginError encountered while configuring plugins:\n"
+        "\n\nBadPluginError encountered while configuring plugins:\n"
         + "The value for property 'plugins.md043.headings' is not valid: "
-        + "Heading format not valid: Element must have at least one non-space character after any space characters."
+        + "Heading format not valid: Element must have exactly one space character and one non-space character after any hash characters (#)."
+    )
+
+    # Act
+    execute_results = scanner.invoke_main(
+        arguments=supplied_arguments, suppress_first_line_heading_rule=False
+    )
+
+    # Assert
+    execute_results.assert_results(
+        expected_output, expected_error, expected_return_code
+    )
+
+
+@pytest.mark.rules
+def test_md043_bad_configuration_headings_bad_text_2():
+    """
+    Test to make sure this rule does trigger with a document that
+    contains multiple headings and a pattern with no text.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_path = os.path.join(
+        "test", "resources", "rules", "md043", "good_simple_headings.md"
+    )
+    supplied_arguments = [
+        "--disable-rules",
+        "md024",
+        "--set",
+        "plugins.md043.headings=######  a",
+        "--strict-config",
+        "scan",
+        source_path,
+    ]
+
+    expected_return_code = 1
+    expected_output = ""
+    expected_error = (
+        "\n\nBadPluginError encountered while configuring plugins:\n"
+        + "The value for property 'plugins.md043.headings' is not valid: "
+        + "Heading format not valid: Element must have exactly one space character and one non-space character after any hash characters (#)."
     )
 
     # Act
@@ -452,6 +495,41 @@ def test_md043_good_double_heading_atx_with_double_rule():
     supplied_arguments = [
         "--set",
         "plugins.md043.headings=# This is a single heading,## Another heading",
+        "--strict-config",
+        "scan",
+        source_path,
+    ]
+
+    expected_return_code = 0
+    expected_output = ""
+    expected_error = ""
+
+    # Act
+    execute_results = scanner.invoke_main(
+        arguments=supplied_arguments, suppress_first_line_heading_rule=False
+    )
+
+    # Assert
+    execute_results.assert_results(
+        expected_output, expected_error, expected_return_code
+    )
+
+
+@pytest.mark.rules
+def test_md043_good_double_heading_atx_with_double_rule_with_spaces_in_config():
+    """
+    Test to make sure this rule does trigger with a document that
+    contains two headings and a pattern of those two headings.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_path = os.path.join(
+        "test", "resources", "rules", "md043", "good_double_heading_atx.md"
+    )
+    supplied_arguments = [
+        "--set",
+        "plugins.md043.headings= # This is a single heading , ## Another heading ",
         "--strict-config",
         "scan",
         source_path,
@@ -1164,3 +1242,25 @@ def test_md043_bad_good_many_level_two_1_star_3_2_star_3():
     execute_results.assert_results(
         expected_output, expected_error, expected_return_code
     )
+
+
+def test_md043_query_config():
+    config_test = pluginQueryConfigTest(
+        "md043",
+        """
+  ITEM               DESCRIPTION
+
+  Id                 md043
+  Name(s)            required-headings,required-headers
+  Short Description  Required heading structure
+  Description Url    https://pymarkdown.readthedocs.io/en/latest/plugins/rule_
+                     md043.md
+
+
+  CONFIGURATION ITEM  TYPE    VALUE
+
+  headings            string  ""
+
+""",
+    )
+    execute_query_configuration_test(config_test)

@@ -1,10 +1,15 @@
 """
 Module to implement a plugin that looks for hard tabs in the files.
 """
+
 from typing import List, Optional, cast
 
 from pymarkdown.general.tab_helper import TabHelper
-from pymarkdown.plugin_manager.plugin_details import PluginDetails, PluginDetailsV2
+from pymarkdown.plugin_manager.plugin_details import (
+    PluginDetails,
+    PluginDetailsV3,
+    QueryConfigItem,
+)
 from pymarkdown.plugin_manager.plugin_scan_context import PluginScanContext
 from pymarkdown.plugin_manager.rule_plugin import RulePlugin
 from pymarkdown.tokens.fenced_code_block_markdown_token import (
@@ -30,15 +35,16 @@ class RuleMd010(RulePlugin):
         """
         Get the details for the plugin.
         """
-        return PluginDetailsV2(
+        return PluginDetailsV3(
             plugin_name="no-hard-tabs",
             plugin_id="MD010",
             plugin_enabled_by_default=True,
             plugin_description="Hard tabs",
-            plugin_version="0.5.0",
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md010.md",
+            plugin_version="0.6.0",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md010.md",
             plugin_configuration="code_blocks",
             plugin_supports_fix=True,
+            plugin_fix_level=0,
         )
 
     def initialize_from_config(self) -> None:
@@ -49,6 +55,12 @@ class RuleMd010(RulePlugin):
             "code_blocks",
             default_value=True,
         )
+
+    def query_config(self) -> List[QueryConfigItem]:
+        """
+        Query to find out the configuration that the rule is using.
+        """
+        return [QueryConfigItem("code_blocks", self.__check_in_code_blocks)]
 
     def starting_new_file(self) -> None:
         """
@@ -115,7 +127,6 @@ class RuleMd010(RulePlugin):
         ):
             self.__leaf_token_index += 1
 
-        do_process = False
         if "\t" in line:
             is_inside_of_fenced_code_block = (
                 self.__is_line_inside_of_fenced_code_block()
@@ -137,6 +148,8 @@ class RuleMd010(RulePlugin):
             #         ff += 1
             #     x = 1
             #     assert False
+        else:
+            do_process = False
         if do_process:
             if context.in_fix_mode:
                 context.set_current_fix_line(TabHelper.detabify_string(line))

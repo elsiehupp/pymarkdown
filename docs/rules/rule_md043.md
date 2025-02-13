@@ -6,6 +6,10 @@
 | `required-headings` |
 | `required-headers` |
 
+| Autofix Available |
+| --- |
+| No |
+
 ## Summary
 
 Required heading structure.
@@ -96,7 +100,12 @@ sequence is not followed by anything; it cannot be followed by any headings.
 | Value Name | Type | Default | Description |
 | -- | -- | -- | -- |
 | `enabled` | `boolean` | `True` | Whether the plugin rule is enabled. |
-| `required_headings` | `string` | `""` | Comma separated list of headings to require the document to have. |
+| `required_headings` | `string` | `""` | Comma separated list of headings to require the document to have.** |
+
+** The comma-separated list of items is a string with a format of `{item},...,{item}`.
+Any leading or trailing space characters surrounding the `{item}` are trimmed during
+processing.  Empty `{item}` values after this trimming has been applied will generate
+a configuration error.
 
 For the `required_headings` list, each element is expected to be in one
 of two forms.  The first form is that of a uncomplicated text Atx Heading, such as
@@ -110,3 +119,11 @@ rows may occur.
 
 This rule is largely inspired by the MarkdownLint rule
 [MD043](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md#md043---required-heading-structure).
+
+## Fix Description
+
+The reason for not being able to auto-fix this rule is combinatorial explosion.
+While algorithms for the simpler configurations (such as `## Header,## Footer`)
+can easily be created, the combinations of applicable headings explode when the
+`*` character is used are vast in number.  With such a large number of possible
+headings, determining the "proper" algorithm quickly becomes problematic.

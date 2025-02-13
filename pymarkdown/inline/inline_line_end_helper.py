@@ -1,6 +1,7 @@
 """
 Module to help with the parsing of inline elements at the end of the line.
 """
+
 import logging
 from typing import List, Optional, Tuple, cast
 
@@ -38,7 +39,9 @@ class InlineLineEndHelper:
         coalesced_stack: List[MarkdownToken],
         tabified_text: Optional[str],
         inline_request: InlineRequest,
-    ) -> Tuple[str, Optional[str], List[MarkdownToken], str, Optional[str], str]:
+    ) -> Tuple[
+        str, Optional[str], List[MarkdownToken], str, Optional[str], str, Optional[str]
+    ]:
         """
         Handle the inline case of having the end of line character encountered.
         """
@@ -63,6 +66,7 @@ class InlineLineEndHelper:
             append_to_current_string,
             end_string,
             remaining_line,
+            tabified_remaining_line,
         ) = InlineLineEndHelper.__select_line_ending(
             new_tokens,
             line_number,
@@ -75,6 +79,7 @@ class InlineLineEndHelper:
             is_setext,
             tabified_text,
             inline_request,
+            tabified_remaining_line,
         )
 
         InlineLineEndHelper.__handle_line_end_adjust_block_quote(coalesced_stack)
@@ -86,6 +91,7 @@ class InlineLineEndHelper:
             remaining_line,
             end_string,
             current_string,
+            tabified_remaining_line,
         )
 
     # pylint: enable=too-many-arguments
@@ -137,7 +143,26 @@ class InlineLineEndHelper:
         POGGER.debug("__is_proper_hard_break>>$>>", is_proper_hard_break)
         return is_proper_hard_break
 
-    # pylint: disable=too-many-arguments
+    @staticmethod
+    def __select_line_end_hard_break(
+        new_tokens: List[MarkdownToken],
+        line_number: int,
+        adj_hard_column: int,
+        current_string: str,
+    ) -> Tuple[str, Optional[str], str]:
+        POGGER.debug(">>proper hard break")
+        new_tokens.append(
+            HardBreakMarkdownToken(
+                InlineBackslashHelper.backslash_character,
+                line_number,
+                adj_hard_column - 1,
+            )
+        )
+        current_string, whitespace_to_add = current_string[:-1], None
+        append_to_current_string = ""
+        return current_string, whitespace_to_add, append_to_current_string
+
+    # pylint: disable=too-many-arguments, too-many-locals
     @staticmethod
     def __select_line_ending(
         new_tokens: List[MarkdownToken],
@@ -151,7 +176,8 @@ class InlineLineEndHelper:
         is_setext: bool,
         tabified_text: Optional[str],
         inline_request: InlineRequest,
-    ) -> Tuple[str, Optional[str], str, Optional[str], str]:
+        tabified_remaining_line: Optional[str],
+    ) -> Tuple[str, Optional[str], str, Optional[str], str, Optional[str]]:
         # POGGER.debug(">>removed_end_whitespace>:$:<", removed_end_whitespace)
         # POGGER.debug(">>tabified_text>:$:<", tabified_text)
         # POGGER.debug(
@@ -171,21 +197,18 @@ class InlineLineEndHelper:
         #     remaining_line,
         # )
 
-        is_proper_end = not tabified_text or tabified_text.endswith("  ")
+        is_proper_end = not tabified_text or (
+            tabified_remaining_line and tabified_remaining_line.endswith("  ")
+        )
 
         if InlineLineEndHelper.__is_proper_hard_break(
             current_string, removed_end_whitespace_size
         ):
-            POGGER.debug(">>proper hard break")
-            new_tokens.append(
-                HardBreakMarkdownToken(
-                    InlineBackslashHelper.backslash_character,
-                    line_number,
-                    adj_hard_column - 1,
+            current_string, whitespace_to_add, append_to_current_string = (
+                InlineLineEndHelper.__select_line_end_hard_break(
+                    new_tokens, line_number, adj_hard_column, current_string
                 )
             )
-            current_string, whitespace_to_add = current_string[:-1], None
-            append_to_current_string = ""
         elif removed_end_whitespace_size >= 2 and is_proper_end:
             POGGER.debug(">>whitespace hard break")
             new_tokens.append(
@@ -195,6 +218,17 @@ class InlineLineEndHelper:
             )
             whitespace_to_add = None
             append_to_current_string = ""
+
+            if tabified_remaining_line is not None:
+                number_collected_characters, start_index = (
+                    ParserHelper.collect_backwards_while_character_verified(
+                        tabified_remaining_line, len(tabified_remaining_line), " "
+                    )
+                )
+                assert (
+                    number_collected_characters >= 2
+                ), "Based on the elif statement, should collect at least 2 characters."
+                tabified_remaining_line = tabified_remaining_line[:start_index]
         else:
             POGGER.debug(">>normal end")
             # POGGER.debug("current_string>:$:<", current_string)
@@ -231,9 +265,10 @@ class InlineLineEndHelper:
             append_to_current_string,
             end_string,
             remaining_line,
+            tabified_remaining_line,
         )
 
-    # pylint: enable=too-many-arguments
+    # pylint: enable=too-many-arguments, too-many-locals
 
     # pylint: disable=too-many-arguments
     @staticmethod
@@ -261,18 +296,17 @@ class InlineLineEndHelper:
             new_index, ex_ws = ParserHelper.extract_spaces(remaining_line, 0)
             # POGGER.debug("<<new_index<<$<<", new_index)
             # POGGER.debug("<<ex_ws<<$<<", ex_ws)
-            assert new_index
-            end_string = f"{ex_ws}{ParserHelper.whitespace_split_character}"
+            end_string = (
+                f"{ex_ws}{ParserHelper.whitespace_split_character}" if new_index else ""
+            )
             remaining_line = remaining_line[new_index:]
         if not is_setext and tabified_remaining_line and removed_end_whitespace:
             POGGER.debug("<<tabified_remaining_line>:$:<", tabified_remaining_line)
             POGGER.debug("<<removed_end_whitespace>:$:<", removed_end_whitespace)
-            adj_original, _ = TabHelper.find_detabify_string_ex(
+            removed_end_whitespace, _ = TabHelper.find_detabify_string_ex(
                 tabified_remaining_line, removed_end_whitespace
             )
-            POGGER.debug("<<adj_original<<$<<", adj_original)
-            assert adj_original is not None
-            removed_end_whitespace = adj_original
+            POGGER.debug("<<removed_end_whitespace<<$<<", removed_end_whitespace)
 
         POGGER.debug("<<end_string<<$<<", end_string)
         end_string = (
@@ -308,7 +342,9 @@ class InlineLineEndHelper:
         """
         Process a new line character.
         """
-        assert source_text[next_index] == ParserHelper.newline_character
+        assert (
+            source_text[next_index] == ParserHelper.newline_character
+        ), "Processing a newline, so the indexed character must be one."
         # POGGER.debug("end_string>:$:<", end_string)
         # POGGER.debug("remaining_line>:$:<", remaining_line)
         # POGGER.debug("tabified_remaining_line>:$:<", tabified_remaining_line)
@@ -324,6 +360,7 @@ class InlineLineEndHelper:
             remaining_line,
             end_string,
             current_string,
+            tabified_remaining_line,
         ) = InlineLineEndHelper.__handle_line_end(
             remaining_line,
             tabified_remaining_line,
@@ -347,6 +384,9 @@ class InlineLineEndHelper:
 
         if not inline_response.new_tokens:
             # POGGER.debug("ws")
+            assert (
+                end_string is not None
+            ), "If no new tokens, an end_string must be produced."
             end_string = InlineLineEndHelper.__add_recombined_whitespace(
                 bool(whitespace_to_recombine),
                 source_text,
@@ -373,8 +413,8 @@ class InlineLineEndHelper:
             para_owner.rehydrate_index += 1
             # POGGER.debug(">>para_owner.rehydrate_index>>$<<", para_owner.rehydrate_index)
 
-        if tabified_remaining_line and end_string and len(end_string) > 1:
-            assert end_string is not None
+        if tabified_remaining_line and end_string is not None and len(end_string) > 1:
+            # assert end_string is not None
             tabified_remaining_line = InlineLineEndHelper.__clean_up_new_line(
                 end_string, is_setext, tabified_remaining_line
             )
@@ -396,10 +436,15 @@ class InlineLineEndHelper:
     ) -> str:
         POGGER.debug("end_string>$<", end_string)
         POGGER.debug("tabified_remaining_line>$<", tabified_remaining_line)
-        assert end_string[-1] in ["\n", ParserHelper.whitespace_split_character]
+        assert end_string[-1] in [
+            "\n",
+            ParserHelper.whitespace_split_character,
+        ], "Due to SetExt paragraphs, can be either."
         if end_string[-1] == ParserHelper.whitespace_split_character:
             newline_index = end_string.rfind("\n")
-            assert newline_index != -1
+            assert (
+                newline_index != -1
+            ), "if we hit a split character, must find the newline"
             end_suffix = end_string[:newline_index]
         else:
             end_suffix = end_string[:-1]
@@ -407,19 +452,21 @@ class InlineLineEndHelper:
         newline_index = end_suffix.rfind("\n")
         if is_setext:
             special_index = end_suffix.rfind(ParserHelper.whitespace_split_character)
-            if special_index != -1 and newline_index != 1:
-                max_index = max(special_index, special_index)
+            if special_index != -1 or newline_index != -1:
+                max_index = max(special_index, newline_index)
                 end_suffix = end_suffix[max_index + 1 :]
             else:
-                assert special_index == -1
-                assert newline_index != 1
+                assert special_index == -1, "other side of the if statement"
+                assert newline_index != 1, "other side of the if statement"
                 end_suffix = end_suffix[newline_index + 1 :]
         elif newline_index != -1:
             end_suffix = end_suffix[newline_index + 1 :]
 
         POGGER.debug("tabified_remaining_line>$<", tabified_remaining_line)
         POGGER.debug("end_suffix>$<", end_suffix)
-        assert tabified_remaining_line.endswith(end_suffix)
+        assert tabified_remaining_line.endswith(
+            end_suffix
+        ), "Tabified line should end with the newly computed suffix."
         if end_suffix:
             tabified_remaining_line = tabified_remaining_line[: -(len(end_suffix))]
         POGGER.debug("tabified_remaining_line>$<", tabified_remaining_line)
@@ -430,9 +477,9 @@ class InlineLineEndHelper:
         did_recombine: bool,
         source_text: str,
         inline_response: InlineResponse,
-        end_string: Optional[str],
+        end_string: str,
         is_setext: bool,
-    ) -> Optional[str]:
+    ) -> str:
         POGGER.debug("__arw>>did_recombine>>$>>", did_recombine)
         POGGER.debug(
             "__arw>>end_string>>$>>",
@@ -443,8 +490,10 @@ class InlineLineEndHelper:
                 "__arw>>source_text>>$>>",
                 source_text,
             )
-            assert inline_response.new_index is not None
-            new_index, extracted_whitespace = ParserHelper.extract_spaces(
+            assert (
+                inline_response.new_index is not None
+            ), "new_index should be defined by this point."
+            new_index, extracted_whitespace = ParserHelper.extract_spaces_verified(
                 source_text, inline_response.new_index
             )
             POGGER.debug("__arw>>$>>", source_text[: inline_response.new_index])
@@ -453,10 +502,11 @@ class InlineLineEndHelper:
                 "__arw>>extracted_whitespace>>$>>",
                 extracted_whitespace,
             )
+            assert (
+                is_setext
+            ), "If trying to recombine and whitespace is found, must be text in an SetExt heading."
             if extracted_whitespace:
                 inline_response.new_index = new_index
-                assert end_string is not None
-                assert is_setext
                 end_string = f"{end_string}{extracted_whitespace}{ParserHelper.whitespace_split_character}"
                 POGGER.debug(
                     "__arw>>end_string>>$>>",

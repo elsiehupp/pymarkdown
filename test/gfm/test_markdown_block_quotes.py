@@ -1,6 +1,7 @@
 """
 https://github.github.com/gfm/#block-quotes
 """
+
 from test.utils import act_and_assert
 
 import pytest
@@ -685,7 +686,7 @@ def test_block_quotes_213b():
 
 
 @pytest.mark.gfm
-def test_block_quotes_213c():
+def test_block_quotes_213cx():
     """
     Test case 213c:  variation of 213 that has a block quote before the
         second line, but also includes a properly indented text line that
@@ -715,6 +716,84 @@ def test_block_quotes_213c():
 brr</li>
 <li>bar</li>
 </ul>
+</blockquote>"""
+
+    # Act & Assert
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
+
+
+@pytest.mark.gfm
+def test_block_quotes_213ca():
+    """
+    Test case 213c:  variation of 213 that has a block quote before the
+        second line, but also includes a properly indented text line that
+        belongs to the list
+    """
+
+    # Arrange
+    source_markdown = """> - foo
+>   brr
+> - bar"""
+    expected_tokens = [
+        "[block-quote(1,1)::> \n> \n> ]",
+        "[ulist(1,3):-::4::  ]",
+        "[para(1,5):\n]",
+        "[text(1,5):foo\nbrr::\n]",
+        "[end-para:::True]",
+        "[li(3,3):4::]",
+        "[para(3,5):]",
+        "[text(3,5):bar:]",
+        "[end-para:::True]",
+        "[end-ulist:::True]",
+        "[end-block-quote:::True]",
+    ]
+    expected_gfm = """<blockquote>
+<ul>
+<li>foo
+brr</li>
+<li>bar</li>
+</ul>
+</blockquote>"""
+
+    # Act & Assert
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
+
+
+@pytest.mark.gfm
+def test_block_quotes_213cb():
+    """
+    Test case 213c:  variation of 213 that has a block quote before the
+        second line, but also includes a properly indented text line that
+        belongs to the list
+    """
+
+    # Arrange
+    source_markdown = """> > - foo
+      brr
+> > - bar"""
+    expected_tokens = [
+        "[block-quote(1,1)::]",
+        "[block-quote(1,3)::> > \n\n> > ]",
+        "[ulist(1,5):-::6::      ]",
+        "[para(1,7):\n]",
+        "[text(1,7):foo\nbrr::\n]",
+        "[end-para:::True]",
+        "[li(3,5):6::]",
+        "[para(3,7):]",
+        "[text(3,7):bar:]",
+        "[end-para:::True]",
+        "[end-ulist:::True]",
+        "[end-block-quote:::True]",
+        "[end-block-quote:::True]",
+    ]
+    expected_gfm = """<blockquote>
+<blockquote>
+<ul>
+<li>foo
+brr</li>
+<li>bar</li>
+</ul>
+</blockquote>
 </blockquote>"""
 
     # Act & Assert
@@ -1991,7 +2070,6 @@ comments
 
 
 @pytest.mark.gfm
-@pytest.mark.skip
 def test_block_quotes_229jx():
     """
     Test case 229j:  variation of 229 with different spacing
@@ -2028,7 +2106,6 @@ comments
 
 
 @pytest.mark.gfm
-@pytest.mark.skip
 def test_block_quotes_229ja():
     """
     Test case 229ja:  variation of 229j with different spacing
@@ -2060,6 +2137,42 @@ def test_block_quotes_229ja():
 <script>
 comments
 </blockquote>
+</blockquote>
+</script>
+</blockquote>"""
+
+    # Act & Assert
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
+
+
+@pytest.mark.gfm
+def test_block_quotes_229jb():
+    """
+    Test case 229ja:  variation of 229j with different spacing
+    """
+
+    # Arrange
+    source_markdown = """> > <script>
+> > comments
+> </script>
+"""
+    expected_tokens = [
+        "[block-quote(1,1)::> ]",
+        "[block-quote(1,3)::> > \n> > ]",
+        "[html-block(1,5)]",
+        "[text(1,5):<script>\ncomments:]",
+        "[end-html-block:::True]",
+        "[end-block-quote:::True]",
+        "[html-block(3,3)]",
+        "[text(3,3):</script>:]",
+        "[end-html-block:::False]",
+        "[end-block-quote:::False]",
+        "[BLANK(4,1):]",
+    ]
+    expected_gfm = """<blockquote>
+<blockquote>
+<script>
+comments
 </blockquote>
 </script>
 </blockquote>"""
@@ -2663,9 +2776,7 @@ def test_block_quotes_extra_03ab():
         "[BLANK(2,1):]",
         "[block-quote(3,1)::> ]",
         "[para(3,3):]",
-        "[text(3,3):[:]",
-        "[text(3,4):foo:]",
-        "[text(3,7):]:]",
+        "[text(3,3):[foo]:]",
         "[end-para:::True]",
         "[end-block-quote:::True]",
     ]
