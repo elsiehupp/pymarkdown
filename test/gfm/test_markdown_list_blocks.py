@@ -8,7 +8,7 @@ import pytest
 
 
 @pytest.mark.gfm
-def test_list_blocks_231():
+def test_list_blocks_231x():
     """
     Test case 231:  If the list item is ordered, then it is also assigned a start number, based on the ordered list marker.
     """
@@ -42,6 +42,75 @@ with two lines.</p>
 <blockquote>
 <p>A block quote.</p>
 </blockquote>"""
+
+    # Act & Assert
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
+
+
+@pytest.mark.gfm
+def test_list_blocks_231a():
+    """
+    Test case 231:  If the list item is ordered, then it is also assigned a start number, based on the ordered list marker.
+    """
+
+    # Arrange
+    source_markdown = """A paragraph
+with two lines.
+\x0c
+    indented code
+\x0c
+> A block quote."""
+    expected_tokens = [
+        "[para(1,1):\n]",
+        "[text(1,1):A paragraph\nwith two lines.::\n]",
+        "[end-para:::True]",
+        "[BLANK(3,1):\x0c]",
+        "[icode-block(4,5):    :]",
+        "[text(4,5):indented code:]",
+        "[end-icode-block:::True]",
+        "[BLANK(5,1):\x0c]",
+        "[block-quote(6,1)::> ]",
+        "[para(6,3):]",
+        "[text(6,3):A block quote.:]",
+        "[end-para:::True]",
+        "[end-block-quote:::True]",
+    ]
+    expected_gfm = """<p>A paragraph
+with two lines.</p>
+<pre><code>indented code
+</code></pre>
+<blockquote>
+<p>A block quote.</p>
+</blockquote>"""
+
+    # Act & Assert
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
+
+
+@pytest.mark.gfm
+def test_list_blocks_231b():
+    """
+    Test case 231:  variant
+    """
+
+    # Arrange
+    source_markdown = """A paragraph
+with two lines.
+\u00a0
+    indented code
+\u00a0
+> A block quote."""
+    expected_tokens = [
+        "[para(1,1):\n\n\n    \n]",
+        "[text(1,1):A paragraph\nwith two lines.\n\u00a0\nindented code\n\u00a0::\n\n\n\n]",
+        "[end-para:::True]",
+        "[block-quote(6,1)::> ]",
+        "[para(6,3):]",
+        "[text(6,3):A block quote.:]",
+        "[end-para:::True]",
+        "[end-block-quote:::True]",
+    ]
+    expected_gfm = """<p>A paragraph\nwith two lines.\n\u00a0\nindented code\n\u00a0</p>\n<blockquote>\n<p>A block quote.</p>\n</blockquote>"""
 
     # Act & Assert
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
@@ -2168,8 +2237,7 @@ foo
 1."""
     expected_tokens = [
         "[para(1,1):\n]",
-        "[text(1,1):foo\n::\n]",
-        "[text(2,1):*:]",
+        "[text(1,1):foo\n*::\n]",
         "[end-para:::True]",
         "[BLANK(3,1):]",
         "[para(4,1):\n]",
@@ -2647,15 +2715,15 @@ continued here.
     expected_tokens = [
         "[BLANK(1,1):]",
         "[block-quote(2,1)::> ]",
-        "[olist(2,3):.:1:5::\n\n]",
+        "[olist(2,3):.:1:5::\n]",
         "[block-quote(2,6)::> \n\n]",
         "[para(2,8):\n]",
         "[text(2,8):Blockquote\ncontinued here.::\n]",
         "[end-para:::True]",
         "[end-block-quote:::True]",
-        "[BLANK(4,1):]",
         "[end-olist:::True]",
         "[end-block-quote:::True]",
+        "[BLANK(4,1):]",
     ]
     expected_gfm = """<blockquote>
 <ol>
@@ -2832,15 +2900,15 @@ def test_list_blocks_271ax():
 """
     expected_tokens = [
         "[block-quote(1,1)::> ]",
-        "[olist(1,3):.:1:5::\n]",
+        "[olist(1,3):.:1:5::]",
         "[block-quote(1,6)::> \n> \n]",
         "[para(1,8):\n]",
         "[text(1,8):Blockquote\ncontinued here.::\n]",
         "[end-para:::True]",
         "[end-block-quote:::True]",
-        "[BLANK(3,1):]",
         "[end-olist:::True]",
         "[end-block-quote:::True]",
+        "[BLANK(3,1):]",
     ]
     expected_gfm = """<blockquote>
 <ol>
@@ -2870,15 +2938,15 @@ def test_list_blocks_271aa():
 not here"""
     expected_tokens = [
         "[block-quote(1,1)::> ]",
-        "[olist(1,3):.:1:5::\n]",
+        "[olist(1,3):.:1:5::]",
         "[block-quote(1,6)::> \n> \n]",
         "[para(1,8):\n]",
         "[text(1,8):Blockquote\ncontinued here.::\n]",
         "[end-para:::True]",
         "[end-block-quote:::True]",
-        "[BLANK(3,1):]",
         "[end-olist:::True]",
         "[end-block-quote:::True]",
+        "[BLANK(3,1):]",
         "[para(4,1):]",
         "[text(4,1):not here:]",
         "[end-para:::True]",
@@ -4629,6 +4697,104 @@ def test_list_blocks_extra_6xc():
 <li>Item 1b</li>
 <li>Item 1c</li>
 </ol>"""
+
+    # Act & Assert
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
+
+
+@pytest.mark.gfm
+def test_list_blocks_extra_6xd():
+    """
+    Test case 06:  the sublist is properly idented, but the start is extra
+                   indented to right justify the list
+    """
+
+    # Arrange
+    source_markdown = """* First
+  * Second
+* Third
+"""
+    expected_tokens = [
+        "[ulist(1,1):*::2::]",
+        "[para(1,3):]",
+        "[text(1,3):First:]",
+        "[end-para:::True]",
+        "[ulist(2,3):*::4:  ]",
+        "[para(2,5):]",
+        "[text(2,5):Second:]",
+        "[end-para:::True]",
+        "[end-ulist:::True]",
+        "[li(3,1):2::]",
+        "[para(3,3):]",
+        "[text(3,3):Third:]",
+        "[end-para:::True]",
+        "[BLANK(4,1):]",
+        "[end-ulist:::True]",
+    ]
+    expected_gfm = """<ul>
+<li>First
+<ul>
+<li>Second</li>
+</ul>
+</li>
+<li>Third</li>
+</ul>"""
+
+    # Act & Assert
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
+
+
+@pytest.mark.gfm
+def test_list_blocks_extra_6xe():
+    """
+    Test case 06:  the sublist is properly idented, but the start is extra
+                   indented to right justify the list
+    """
+
+    # Arrange
+    source_markdown = """ *  First
+    first paragraph
+
+    *  Second
+
+    second paragraph
+ *  Third
+"""
+    expected_tokens = [
+        "[ulist(1,2):*::4: :    \n\n    \n]",
+        "[para(1,5):\n]",
+        "[text(1,5):First\nfirst paragraph::\n]",
+        "[end-para:::True]",
+        "[BLANK(3,1):]",
+        "[ulist(4,5):*::7:    :]",
+        "[para(4,8):]",
+        "[text(4,8):Second:]",
+        "[end-para:::True]",
+        "[BLANK(5,1):]",
+        "[end-ulist:::True]",
+        "[para(6,5):]",
+        "[text(6,5):second paragraph:]",
+        "[end-para:::True]",
+        "[li(7,2):4: :]",
+        "[para(7,5):]",
+        "[text(7,5):Third:]",
+        "[end-para:::True]",
+        "[BLANK(8,1):]",
+        "[end-ulist:::True]",
+    ]
+    expected_gfm = """<ul>
+<li>
+<p>First
+first paragraph</p>
+<ul>
+<li>Second</li>
+</ul>
+<p>second paragraph</p>
+</li>
+<li>
+<p>Third</p>
+</li>
+</ul>"""
 
     # Act & Assert
     act_and_assert(source_markdown, expected_gfm, expected_tokens)

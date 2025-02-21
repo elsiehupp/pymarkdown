@@ -5,6 +5,7 @@ Note that there are various functions that are `x_with_blank_line` where
      `x` is the function before it.  As indented code blocks do not interupt
      paragraphs, the blank line is needed to force the indented code block.
 """
+
 from test.utils import act_and_assert
 
 import pytest
@@ -252,7 +253,6 @@ indented block</p>
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
-@pytest.mark.skip
 @pytest.mark.gfm
 def test_whitespaces_indented_code_with_spaces_before_within_double_block_quotes_with_blank_line():
     """
@@ -281,12 +281,13 @@ def test_whitespaces_indented_code_with_spaces_before_within_double_block_quotes
     ]
     expected_gfm = """<blockquote>
 <p>abc</p>
+</blockquote>
 <blockquote>
-<p>def</p>
+<blockquote>
+<p>def
+indented block</p>
 </blockquote>
-</blockquote>
-<pre><code>  indented block
-</code></pre>"""
+</blockquote>"""
 
     # Act & Assert
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
@@ -395,7 +396,6 @@ def</li>
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
-@pytest.mark.skip
 @pytest.mark.gfm
 def test_whitespaces_indented_code_with_tabs_before_within_unordered_list_x_with_blank_line():
     """
@@ -407,13 +407,13 @@ def test_whitespaces_indented_code_with_tabs_before_within_unordered_list_x_with
 
 \t  def"""
     expected_tokens = [
-        "[ulist(1,1):-::2::\n  ]",
+        "[ulist(1,1):-::2::\n]",
         "[para(1,3):]",
         "[text(1,3):abc:]",
         "[end-para:::True]",
         "[BLANK(2,1):]",
-        "[icode-block(3,7):\t:]",
-        "[text(3,7):  def:]",
+        "[icode-block(3,7):\t  :]",
+        "[text(3,7):def:]",
         "[end-icode-block:::True]",
         "[end-ulist:::True]",
     ]
@@ -454,7 +454,6 @@ def</li>
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
-@pytest.mark.skip
 @pytest.mark.gfm
 def test_whitespaces_indented_code_with_tabs_before_within_unordered_list_and_single_space_and_blank_line():
     """
@@ -466,13 +465,13 @@ def test_whitespaces_indented_code_with_tabs_before_within_unordered_list_and_si
 
  \t  def"""
     expected_tokens = [
-        "[ulist(1,1):-::2::\n  ]",
+        "[ulist(1,1):-::2::\n ]",
         "[para(1,3):]",
         "[text(1,3):abc:]",
         "[end-para:::True]",
         "[BLANK(2,1):]",
-        "[icode-block(3,7): \t:]",
-        "[text(3,7):  def:]",
+        "[icode-block(3,7):\t  :]",
+        "[text(3,7):def:]",
         "[end-icode-block:::True]",
         "[end-ulist:::True]",
     ]
@@ -513,7 +512,6 @@ def</li>
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
-@pytest.mark.skip
 @pytest.mark.gfm
 def test_whitespaces_indented_code_with_tabs_before_within_unordered_list_and_spaces_with_blank_line():
     """
@@ -530,8 +528,8 @@ def test_whitespaces_indented_code_with_tabs_before_within_unordered_list_and_sp
         "[text(1,3):abc:]",
         "[end-para:::True]",
         "[BLANK(2,1):]",
-        "[icode-block(3,7):  \t:]",
-        "[text(3,7):  def:]",
+        "[icode-block(3,7):\t  :]",
+        "[text(3,7):def:]",
         "[end-icode-block:::True]",
         "[end-ulist:::True]",
     ]
@@ -582,7 +580,6 @@ ghi</li>
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
-@pytest.mark.skip
 @pytest.mark.gfm
 def test_whitespaces_indented_code_with_tabs_before_within_unordered_double_list_with_blank_line():
     """
@@ -605,7 +602,7 @@ def test_whitespaces_indented_code_with_tabs_before_within_unordered_double_list
         "[end-para:::True]",
         "[BLANK(3,1):]",
         "[icode-block(4,9):\t:]",
-        "[text(4,9):\tghi:]",
+        "[text(4,9):ghi:]",
         "[end-icode-block:::True]",
         "[end-ulist:::True]",
         "[end-ulist:::True]",
@@ -651,7 +648,6 @@ def</li>
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
-@pytest.mark.skip
 @pytest.mark.gfm
 def test_whitespaces_indented_code_with_tabs_before_within_ordered_list_x_with_blank_line():
     """
@@ -663,13 +659,13 @@ def test_whitespaces_indented_code_with_tabs_before_within_ordered_list_x_with_b
 
 \t   def"""
     expected_tokens = [
-        "[olist(1,1):.:1:3::\n   ]",
+        "[olist(1,1):.:1:3::\n]",
         "[para(1,4):]",
         "[text(1,4):abc:]",
         "[end-para:::True]",
         "[BLANK(2,1):]",
-        "[icode-block(3,8):\t:]",
-        "[text(3,8):   def:]",
+        "[icode-block(3,8):\t   :]",
+        "[text(3,8):def:]",
         "[end-icode-block:::True]",
         "[end-olist:::True]",
     ]
@@ -768,7 +764,6 @@ def</li>
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
-@pytest.mark.skip
 @pytest.mark.gfm
 def test_whitespaces_indented_code_with_tabs_before_within_ordered_list_and_single_space_with_blank_line():
     """
@@ -780,13 +775,13 @@ def test_whitespaces_indented_code_with_tabs_before_within_ordered_list_and_sing
 
  \t   def"""
     expected_tokens = [
-        "[olist(1,1):.:1:3::\n   ]",
+        "[olist(1,1):.:1:3::\n ]",
         "[para(1,4):]",
         "[text(1,4):abc:]",
         "[end-para:::True]",
         "[BLANK(2,1):]",
-        "[icode-block(3,8): \t:]",
-        "[text(3,8):   def:]",
+        "[icode-block(3,8):\t   :]",
+        "[text(3,8):def:]",
         "[end-icode-block:::True]",
         "[end-olist:::True]",
     ]
@@ -827,7 +822,6 @@ def</li>
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
-@pytest.mark.skip
 @pytest.mark.gfm
 def test_whitespaces_indented_code_with_tabs_before_within_ordered_list_and_spaces_with_blank_line():
     """
@@ -839,13 +833,13 @@ def test_whitespaces_indented_code_with_tabs_before_within_ordered_list_and_spac
 
   \t   def"""
     expected_tokens = [
-        "[olist(1,1):.:1:3::\n   ]",
+        "[olist(1,1):.:1:3::\n  ]",
         "[para(1,4):]",
         "[text(1,4):abc:]",
         "[end-para:::True]",
         "[BLANK(2,1):]",
-        "[icode-block(3,8):  \t:]",
-        "[text(3,8):   def:]",
+        "[icode-block(3,8):\t   :]",
+        "[text(3,8):def:]",
         "[end-icode-block:::True]",
         "[end-olist:::True]",
     ]
@@ -861,7 +855,6 @@ def test_whitespaces_indented_code_with_tabs_before_within_ordered_list_and_spac
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
-@pytest.mark.skip
 @pytest.mark.gfm
 def test_whitespaces_indented_code_with_tabs_before_within_ordered_double_list_x():
     """
@@ -871,24 +864,32 @@ def test_whitespaces_indented_code_with_tabs_before_within_ordered_double_list_x
     # Arrange
     source_markdown = """1. abc
    1. def
+
 \t\t  ghi"""
     expected_tokens = [
         "[olist(1,1):.:1:3:]",
         "[para(1,4):]",
         "[text(1,4):abc:]",
         "[end-para:::True]",
-        "[olist(2,4):.:1:6:   :]",
-        "[para(2,7):\n\t  ]",
-        "[text(2,7):def\nghi::\n]",
+        "[olist(2,4):.:1:6:   :\n\t]",
+        "[para(2,7):]",
+        "[text(2,7):def:]",
         "[end-para:::True]",
+        "[BLANK(3,1):]",
+        "[icode-block(4,11):\t  :]",
+        "[text(4,11):ghi:]",
+        "[end-icode-block:::True]",
         "[end-olist:::True]",
         "[end-olist:::True]",
     ]
     expected_gfm = """<ol>
 <li>abc
 <ol>
-<li>def
-ghi</li>
+<li>
+<p>def</p>
+<pre><code>ghi
+</code></pre>
+</li>
 </ol>
 </li>
 </ol>"""
@@ -1009,7 +1010,6 @@ ghi	jkl</li>
     act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
-@pytest.mark.skip
 @pytest.mark.gfm
 def test_whitespaces_indented_code_with_tabs_before_within_ordered_double_list_tab_after_indent_with_blank_line():
     """
@@ -1033,7 +1033,7 @@ def test_whitespaces_indented_code_with_tabs_before_within_ordered_double_list_t
         "[BLANK(3,1):]",
         "[end-olist:::True]",
         "[icode-block(4,8):    :]",
-        "[text(4,8):   ghi\tjkl:]",
+        "[text(4,8):ghi\tjkl:]",
         "[end-icode-block:::True]",
         "[end-olist:::True]",
     ]

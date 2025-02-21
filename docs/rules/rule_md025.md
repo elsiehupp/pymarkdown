@@ -6,6 +6,10 @@
 | `single-title` |
 | `single-h1` |
 
+| Autofix Available |
+| --- |
+| No |
+
 ## Summary
 
 Multiple top-level headings in the same document.
@@ -99,8 +103,12 @@ to check against for multiples.
 | Value Name | Type | Default | Description |
 | -- | -- | -- | -- |
 | `enabled` | `boolean` | `True` | Whether the plugin rule is enabled. |
-| `front_matter_title` | `string` | `title` | Name of the front-matter field that has the title associated with the document. |
+| `front_matter_title` | `string` | `title` | Name of the front-matter field that has the title associated with the document.** |
 | `level` | `integer` | `1` | Heading level to be considered as the top-level. |
+
+** Any leading or trailing space characters are removed from the `front_matter_title`
+during processing.  This value is expected not to have the `:` at the end. Therefore,
+a header value of `subject:` would be entered as `subject`.
 
 ## Origination of Rule
 
@@ -114,3 +122,14 @@ original rule specified a regular expression used to look for the
 specific element within a raw front-matter element.  By default, this
 was `"^\s*"?title"?\s*[:=]"`.  To support simplicity, this rule
 simply looks for the value of the front-matter key `title` by default.
+
+## Fix Description
+
+The reasons for not being able to auto-fix this rule are context and cascading fixes.
+On the context front, while there is precedence only the first top level heading
+of a document should be honored, we do not currently consider it to be a solid enough
+precedent to base a fix on.  In addition, cascading fixes can cause a problem with
+the multiple of the top level heading.  If those offending headings are changed to
+a level 2 heading, should any other headings within those headings be similarly
+increased?  The ambiguities of both reasons were enough for our team to not consider
+any possible fixes for this rule.

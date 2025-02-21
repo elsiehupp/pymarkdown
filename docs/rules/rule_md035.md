@@ -5,6 +5,10 @@
 | `md035` |
 | `hr-style` |
 
+| Autofix Available |
+| --- |
+| Yes |
+
 ## Summary
 
 Horizontal rule style.
@@ -71,10 +75,18 @@ is made, so that the following example will not trigger this rule:
 | `enabled` | `boolean` | `True` | Whether the plugin rule is enabled. |
 | `style` | `string` | `consistent` | `consistent` for consistent, or a specific marker** |
 
-** If a specific marker is configured, it must be valid multiples (three or more) of either the
-`-` character, the `_` character, or the `*` character, with optional whitespace between them.
+** If a specific marker is configured, it must be valid multiples (three or more)
+of either the `-` character, the `_` character, or the `*` character, with optional
+whitespace between them. The specific marker cannot start or end with a space
+character.
 
 ## Origination of Rule
 
 This rule is largely inspired by the MarkdownLint rule
 [MD035](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md#md035---horizontal-rule-style).
+
+## Fix Description
+
+All thematic breaks are replaced with the configured thematic break text.  If the
+configuration is the default `consistent`, then the first thematic break in the
+document sets the thematic break text used throughout the document.

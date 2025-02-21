@@ -1,8 +1,10 @@
 """
 Module to provide tests related to the MD033 rule.
 """
+
 import os
 from test.markdown_scanner import MarkdownScanner
+from test.rules.utils import execute_query_configuration_test, pluginQueryConfigTest
 
 import pytest
 
@@ -32,6 +34,42 @@ def test_md033_bad_configuration_allowed_elements():
     expected_error = (
         "BadPluginError encountered while configuring plugins:\n"
         + "The value for property 'plugins.md033.allowed_elements' must be of type 'str'."
+    )
+
+    # Act
+    execute_results = scanner.invoke_main(arguments=supplied_arguments)
+
+    # Assert
+    execute_results.assert_results(
+        expected_output, expected_error, expected_return_code
+    )
+
+
+@pytest.mark.rules
+def test_md033_bad_configuration_allowed_elements_with_empty():
+    """
+    Test to verify that a configuration error is thrown when supplying the
+    allowed_elements value with an integer that is not a string.
+    """
+
+    # Arrange
+    scanner = MarkdownScanner()
+    source_path = os.path.join(
+        "test", "resources", "rules", "md004", "good_list_asterisk_single_level.md"
+    )
+    supplied_arguments = [
+        "--set",
+        "plugins.md033.allowed_elements=html,,a",
+        "--strict-config",
+        "scan",
+        source_path,
+    ]
+
+    expected_return_code = 1
+    expected_output = ""
+    expected_error = (
+        "BadPluginError encountered while configuring plugins:\n"
+        + "Elements in the comma-separated list cannot be empty."
     )
 
     # Act
@@ -92,6 +130,8 @@ def test_md033_bad_html_block_present():
         "test", "resources", "rules", "md033", "bad_html_block_present.md"
     )
     supplied_arguments = [
+        "-d",
+        "PML100,MD041",
         "scan",
         source_path,
     ]
@@ -135,6 +175,8 @@ def test_md033_bad_html_block_present_with_configuration():
         "test", "resources", "rules", "md033", "bad_html_block_present.md"
     )
     supplied_arguments = [
+        "-d",
+        "PML100,MD041",
         "--set",
         "plugins.md033.allowed_elements=",
         "scan",
@@ -188,6 +230,8 @@ def test_md033_bad_html_block_present_with_other_configuration():
         "test", "resources", "rules", "md033", "bad_html_block_present.md"
     )
     supplied_arguments = [
+        "-d",
+        "PML100,MD041",
         "--set",
         "plugins.md033.allowed_elements=robert,p,!A",
         "scan",
@@ -614,3 +658,26 @@ def test_md033_bad_html_declaration():
     execute_results.assert_results(
         expected_output, expected_error, expected_return_code
     )
+
+
+def test_md033_query_config():
+    config_test = pluginQueryConfigTest(
+        "md033",
+        """
+  ITEM               DESCRIPTION
+
+  Id                 md033
+  Name(s)            no-inline-html
+  Short Description  Inline HTML
+  Description Url    https://pymarkdown.readthedocs.io/en/latest/plugins/rule_
+                     md033.md
+
+
+  CONFIGURATION ITEM         TYPE     VALUE
+
+  allow_first_image_element  boolean  True
+  allowed_elements           string   "!--,![CDATA[,!DOCTYPE"
+
+""",
+    )
+    execute_query_configuration_test(config_test)

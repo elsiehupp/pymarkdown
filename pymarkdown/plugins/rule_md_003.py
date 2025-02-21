@@ -2,9 +2,14 @@
 Module to implement a plugin that looks for heading styles that are inconsistent
 throughout the document.
 """
-from typing import Tuple, cast
 
-from pymarkdown.plugin_manager.plugin_details import PluginDetails
+from typing import List, Tuple, cast
+
+from pymarkdown.plugin_manager.plugin_details import (
+    PluginDetails,
+    PluginDetailsV3,
+    QueryConfigItem,
+)
 from pymarkdown.plugin_manager.plugin_scan_context import PluginScanContext
 from pymarkdown.plugin_manager.rule_plugin import RulePlugin
 from pymarkdown.tokens.atx_heading_markdown_token import AtxHeadingMarkdownToken
@@ -44,14 +49,13 @@ class RuleMd003(RulePlugin):
         """
         Get the details for the plugin.
         """
-        return PluginDetails(
+        return PluginDetailsV3(
             plugin_name="heading-style,header-style",
             plugin_id="MD003",
             plugin_enabled_by_default=True,
             plugin_description="Heading style should be consistent throughout the document.",
-            plugin_version="0.5.0",
-            plugin_interface_version=1,
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md003.md",
+            plugin_version="0.6.0",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md003.md",
             plugin_configuration="style",
         )
 
@@ -69,22 +73,34 @@ class RuleMd003(RulePlugin):
             default_value=RuleMd003.__consistent_style,
             valid_value_fn=self.__validate_configuration_style,
         )
-        if self.__style_type == RuleMd003.__consistent_style:
-            self.__allow_consistent_setext_update = (
-                self.plugin_configuration.get_boolean_property(
-                    "allow-setext-update", default_value=False
-                )
+        self.__allow_consistent_setext_update = (
+            self.plugin_configuration.get_boolean_property(
+                "allow-setext-update", default_value=False
             )
-        else:
-            self.__allow_consistent_setext_update = False
+            if self.__style_type == RuleMd003.__consistent_style
+            else False
+        )
+
+    def query_config(self) -> List[QueryConfigItem]:
+        """
+        Query to find out the configuration that the rule is using.
+        """
+        return [
+            QueryConfigItem("style", self.__style_type),
+            QueryConfigItem(
+                "allow-setext-update", self.__allow_consistent_setext_update
+            ),
+        ]
 
     def starting_new_file(self) -> None:
         """
         Event that the a new file to be scanned is starting.
         """
-        self.__actual_style_type = ""
-        if self.__style_type != RuleMd003.__consistent_style:
-            self.__actual_style_type = self.__style_type
+        self.__actual_style_type = (
+            self.__style_type
+            if self.__style_type != RuleMd003.__consistent_style
+            else ""
+        )
 
     def __handle_simple_styles(
         self, heading_style_type: str, is_heading_level_1_or_2: bool

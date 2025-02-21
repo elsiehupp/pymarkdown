@@ -67,7 +67,9 @@ class AtxHeadingMarkdownToken(LeafMarkdownToken):
             self.__hash_count = field_value
             self.__compose_extra_data_field()
             return True
-        return False
+
+        # Handle extracted_whitespace
+        return super()._modify_token(field_name, field_value)
 
     @property
     def hash_count(self) -> int:
@@ -142,15 +144,19 @@ class AtxHeadingMarkdownToken(LeafMarkdownToken):
         )
 
         del context.block_stack[-1]
-        assert current_end_token.extra_end_data is not None
+        assert (
+            current_end_token.extra_end_data is not None
+        ), "extra_end_data must be defined by now."
         return "".join(
             [
                 current_end_token.extra_end_data,
-                ParserHelper.repeat_string(
-                    "#", current_start_token.remove_trailing_count
-                )
-                if current_start_token.remove_trailing_count
-                else "",
+                (
+                    ParserHelper.repeat_string(
+                        "#", current_start_token.remove_trailing_count
+                    )
+                    if current_start_token.remove_trailing_count
+                    else ""
+                ),
                 current_end_token.extracted_whitespace,
                 ParserHelper.newline_character,
             ]

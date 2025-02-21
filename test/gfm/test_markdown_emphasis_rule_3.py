@@ -1,6 +1,7 @@
 """
 https://github.github.com/gfm/#emphasis-and-strong-emphasis
 """
+
 from test.utils import act_and_assert
 
 import pytest
@@ -14,13 +15,7 @@ def test_emphasis_374():
 
     # Arrange
     source_markdown = """_foo*"""
-    expected_tokens = [
-        "[para(1,1):]",
-        "[text(1,1):_:]",
-        "[text(1,2):foo:]",
-        "[text(1,5):*:]",
-        "[end-para:::True]",
-    ]
+    expected_tokens = ["[para(1,1):]", "[text(1,1):_foo*:]", "[end-para:::True]"]
     expected_gfm = """<p>_foo*</p>"""
 
     # Act & Assert
@@ -35,13 +30,7 @@ def test_emphasis_375():
 
     # Arrange
     source_markdown = """*foo bar *"""
-    expected_tokens = [
-        "[para(1,1):]",
-        "[text(1,1):*:]",
-        "[text(1,2):foo bar :]",
-        "[text(1,10):*:]",
-        "[end-para:::True]",
-    ]
+    expected_tokens = ["[para(1,1):]", "[text(1,1):*foo bar *:]", "[end-para:::True]"]
     expected_gfm = """<p>*foo bar *</p>"""
 
     # Act & Assert
@@ -59,9 +48,7 @@ def test_emphasis_376():
 *"""
     expected_tokens = [
         "[para(1,1):\n]",
-        "[text(1,1):*:]",
-        "[text(1,2):foo bar\n::\n]",
-        "[text(2,1):*:]",
+        "[text(1,1):*foo bar\n*::\n]",
         "[end-para:::True]",
     ]
     expected_gfm = """<p>*foo bar
@@ -79,14 +66,7 @@ def test_emphasis_377():
 
     # Arrange
     source_markdown = """*(*foo)"""
-    expected_tokens = [
-        "[para(1,1):]",
-        "[text(1,1):*:]",
-        "[text(1,2):(:]",
-        "[text(1,3):*:]",
-        "[text(1,4):foo):]",
-        "[end-para:::True]",
-    ]
+    expected_tokens = ["[para(1,1):]", "[text(1,1):*(*foo):]", "[end-para:::True]"]
     expected_gfm = """<p>*(*foo)</p>"""
 
     # Act & Assert

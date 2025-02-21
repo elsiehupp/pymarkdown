@@ -1,10 +1,15 @@
 """
 Module to implement a plugin that looks for inline HTML in the files.
 """
+
 from typing import List, cast
 
 from pymarkdown.general.parser_helper import ParserHelper
-from pymarkdown.plugin_manager.plugin_details import PluginDetails
+from pymarkdown.plugin_manager.plugin_details import (
+    PluginDetails,
+    PluginDetailsV3,
+    QueryConfigItem,
+)
 from pymarkdown.plugin_manager.plugin_scan_context import PluginScanContext
 from pymarkdown.plugin_manager.rule_plugin import RulePlugin
 from pymarkdown.tokens.markdown_token import MarkdownToken
@@ -29,14 +34,13 @@ class RuleMd033(RulePlugin):
         """
         Get the details for the plugin.
         """
-        return PluginDetails(
+        return PluginDetailsV3(
             plugin_name="no-inline-html",
             plugin_id="MD033",
             plugin_enabled_by_default=True,
             plugin_description="Inline HTML",
-            plugin_version="0.5.1",
-            plugin_interface_version=1,
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md033.md",
+            plugin_version="0.6.0",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md033.md",
             plugin_configuration="allowed_elements, allow_first_image_element",
         )
 
@@ -54,9 +58,25 @@ class RuleMd033(RulePlugin):
             default_value="!--,![CDATA[,!DOCTYPE",
         )
         self.__allowed_elements = []
-        for next_element in allowed_elements.split(","):
-            if next_element := next_element.strip():
-                self.__allowed_elements.append(next_element)
+        if allowed_elements := allowed_elements.strip(" "):
+            for next_element in allowed_elements.split(","):
+                if next_element := next_element.strip(" "):
+                    self.__allowed_elements.append(next_element)
+                else:
+                    raise ValueError(
+                        "Elements in the comma-separated list cannot be empty."
+                    )
+
+    def query_config(self) -> List[QueryConfigItem]:
+        """
+        Query to find out the configuration that the rule is using.
+        """
+        return [
+            QueryConfigItem(
+                "allow_first_image_element", self.__allow_first_image_element
+            ),
+            QueryConfigItem("allowed_elements", ",".join(self.__allowed_elements)),
+        ]
 
     def starting_new_file(self) -> None:
         """
@@ -80,14 +100,11 @@ class RuleMd033(RulePlugin):
         elif tag_text.startswith("!DOCTYPE"):
             tag_text = "!DOCTYPE"
         else:
-            _, new_tag_text = ParserHelper.collect_until_one_of_characters(
+            _, tag_text = ParserHelper.collect_until_one_of_characters_verified(
                 tag_text, 0, " \n\t/>"
             )
-            assert new_tag_text is not None
-            tag_text = new_tag_text
         extra_data = f"Element: {tag_text}"
 
-        is_first_image_element = False
         if (
             self.__is_first_html_block
             and self.__allow_first_image_element
@@ -104,6 +121,8 @@ class RuleMd033(RulePlugin):
                     full_tag_text.startswith("<img")
                     and end_of_image_index == len(full_tag_text) - 1
                 )
+        else:
+            is_first_image_element = False
 
         if not is_first_image_element and tag_text not in self.__allowed_elements:
             self.report_next_token_error(

@@ -1,6 +1,7 @@
 """
 https://github.github.com/gfm/#fenced-code-blocks
 """
+
 from test.utils import act_and_assert
 
 import pytest
@@ -1518,10 +1519,7 @@ def test_fenced_code_blocks_extra_02a():
         "[end-fcode-block::::True]",
         "[li(2,1):2::]",
         "[para(2,3):\n]",
-        "[text(2,3):[:]",
-        "[text(2,4):foo:]",
-        "[text(2,7):]:]",
-        "[text(2,8)::\n/url::\n]",
+        "[text(2,3):[foo]:\n/url::\n]",
         "[end-para:::True]",
         "[end-ulist:::True]",
         "[fcode-block(4,1):`:3::::::]",
@@ -2027,7 +2025,7 @@ def test_fenced_code_blocks_extra_09a():
 </ul>"""
 
     # Act & Assert
-    act_and_assert(source_markdown, expected_gfm, expected_tokens, show_debug=False)
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
 @pytest.mark.gfm
@@ -2144,7 +2142,7 @@ def test_fenced_code_blocks_extra_09d():
 </ul>"""
 
     # Act & Assert
-    act_and_assert(source_markdown, expected_gfm, expected_tokens, show_debug=False)
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
 @pytest.mark.gfm
@@ -2212,7 +2210,7 @@ def test_fenced_code_blocks_extra_09f():
 </ul>"""
 
     # Act & Assert
-    act_and_assert(source_markdown, expected_gfm, expected_tokens, show_debug=False)
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
 @pytest.mark.gfm
@@ -2280,4 +2278,4 @@ def test_fenced_code_blocks_extra_10a():
 </ul>"""
 
     # Act & Assert
-    act_and_assert(source_markdown, expected_gfm, expected_tokens, show_debug=False)
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)

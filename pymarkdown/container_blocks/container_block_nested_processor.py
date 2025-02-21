@@ -1,6 +1,7 @@
 """
 Module to provide processing for the nested scenarios that may contain container blocks.
 """
+
 from __future__ import annotations
 
 import logging
@@ -10,12 +11,15 @@ from pymarkdown.block_quotes.block_quote_count_helper import BlockQuoteCountHelp
 from pymarkdown.block_quotes.block_quote_data import BlockQuoteData
 from pymarkdown.container_blocks.container_grab_bag import ContainerGrabBag
 from pymarkdown.container_blocks.container_indices import ContainerIndices
+from pymarkdown.general.constants import Constants
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.parser_logger import ParserLogger
 from pymarkdown.general.parser_state import ParserState
 from pymarkdown.general.position_marker import PositionMarker
 from pymarkdown.list_blocks.list_block_starts_helper import ListBlockStartsHelper
 from pymarkdown.tokens.block_quote_markdown_token import BlockQuoteMarkdownToken
+from pymarkdown.tokens.list_start_markdown_token import ListStartMarkdownToken
+from pymarkdown.tokens.setext_heading_markdown_token import SetextHeadingMarkdownToken
 from pymarkdown.tokens.stack_token import ListStackToken
 
 POGGER = ParserLogger(logging.getLogger(__name__))
@@ -48,7 +52,9 @@ class ContainerBlockNestedProcessor:
         POGGER.debug("was_container_start>$", was_container_start)
 
         if was_container_start and position_marker.text_to_parse:
-            assert grab_bag.container_depth < 10
+            assert (
+                grab_bag.container_depth < 10
+            ), "Prevent nesting from going beyond 10 deep."
             nested_container_starts = (
                 ContainerBlockNestedProcessor.__get_nested_container_starts(
                     parser_state,
@@ -60,6 +66,13 @@ class ContainerBlockNestedProcessor:
                 "__handle_nested_container_blocks>nested_container_starts>>:$:<<",
                 nested_container_starts,
             )
+
+            if (
+                len(grab_bag.container_tokens) == 1
+                and grab_bag.container_tokens[0].is_block_quote_end
+            ):
+                parser_state.token_document.extend(grab_bag.container_tokens)
+                grab_bag.container_tokens.clear()
 
             grab_bag.adj_line_to_parse = position_marker.text_to_parse
 
@@ -73,7 +86,9 @@ class ContainerBlockNestedProcessor:
                 grab_bag,
             )
 
-            assert grab_bag.is_leaf_tokens_empty()
+            assert (
+                grab_bag.is_leaf_tokens_empty()
+            ), "No leaf tokens are expected at this point."
             adjusted_text_to_parse = ContainerBlockNestedProcessor.__do_nested_cleanup(
                 parser_state,
                 indent_level_delta,
@@ -176,8 +191,7 @@ class ContainerBlockNestedProcessor:
         POGGER.debug("check next container_start>")
         POGGER.debug("check next container_start>stack>>$", parser_state.token_stack)
 
-        _, ex_ws_test = ParserHelper.extract_spaces(line_to_parse, 0)
-        assert ex_ws_test is not None
+        _, ex_ws_test = ParserHelper.extract_spaces_verified(line_to_parse, 0)
 
         whitespace_scan_start_index = 0
         for token_stack_item in parser_state.token_stack:
@@ -186,20 +200,19 @@ class ContainerBlockNestedProcessor:
                 if list_stack_token.ws_before_marker <= len(ex_ws_test):
                     whitespace_scan_start_index = list_stack_token.ws_before_marker
 
-        after_ws_index, ex_whitespace = ParserHelper.extract_spaces(
+        ws_index, ex_white = ParserHelper.extract_spaces(
             line_to_parse, whitespace_scan_start_index
         )
-        if not ex_whitespace:
-            ex_whitespace = ""
-            after_ws_index = whitespace_scan_start_index
-
-        assert after_ws_index is not None
+        ex_whitespace = "" if ex_white is None else ex_white
+        after_ws_index: int = (
+            whitespace_scan_start_index if ws_index is None else ws_index
+        )
 
         nested_ulist_start, _, _, _ = ListBlockStartsHelper.is_ulist_start(
-            parser_state, line_to_parse, after_ws_index, ex_whitespace, False
+            parser_state, line_to_parse, after_ws_index, ex_whitespace, False, None
         )
         nested_olist_start, _, _, _ = ListBlockStartsHelper.is_olist_start(
-            parser_state, line_to_parse, after_ws_index, ex_whitespace, False
+            parser_state, line_to_parse, after_ws_index, ex_whitespace, False, None
         )
         nested_block_start = (
             False
@@ -226,9 +239,11 @@ class ContainerBlockNestedProcessor:
         """
         POGGER.debug("check next container_start>recursing")
         adj_block, position_marker = (
-            None
-            if grab_bag.end_container_indices.block_index == -1
-            else grab_bag.end_container_indices.block_index,
+            (
+                None
+                if grab_bag.end_container_indices.block_index == -1
+                else grab_bag.end_container_indices.block_index
+            ),
             PositionMarker(position_marker.line_number, -1, grab_bag.adj_line_to_parse),
         )
         new_container_depth = grab_bag.container_depth + 1
@@ -263,8 +278,8 @@ class ContainerBlockNestedProcessor:
         assert (
             not grab_bag.requeue_line_info
             or not grab_bag.requeue_line_info.lines_to_requeue
-        )
-        assert adjusted_text_to_parse is not None
+        ), "Requeing not supported."
+        assert adjusted_text_to_parse is not None, "Adjusted text should be defined."
 
         POGGER.debug("\nRECURSED\n\n")
 
@@ -344,7 +359,9 @@ class ContainerBlockNestedProcessor:
                         last_container_index
                     ].matching_markdown_token,
                 )
-                assert block_quote_token.bleading_spaces is not None
+                assert (
+                    block_quote_token.bleading_spaces is not None
+                ), "Bleading spaces are always defined for block quotes."
                 split_spaces = block_quote_token.bleading_spaces.split(
                     ParserHelper.newline_character
                 )
@@ -358,7 +375,9 @@ class ContainerBlockNestedProcessor:
         block_quote_token: BlockQuoteMarkdownToken,
         grab_bag: ContainerGrabBag,
     ) -> str:
-        assert block_quote_token.bleading_spaces is not None
+        assert (
+            block_quote_token.bleading_spaces is not None
+        ), "Bleading spaces are always defined for block quotes."
         split_spaces = block_quote_token.bleading_spaces.split(
             ParserHelper.newline_character
         )
@@ -390,7 +409,9 @@ class ContainerBlockNestedProcessor:
             )
             POGGER.debug("adjusted_length=$", adjusted_length)
             if adjusted_length != nested_removed_text_length:
-                assert parser_state.original_line_to_parse
+                assert (
+                    parser_state.original_line_to_parse is not None
+                ), "Original line must be defined by this point."
                 nested_removed_text = parser_state.original_line_to_parse[
                     :adjusted_length
                 ]
@@ -420,7 +441,9 @@ class ContainerBlockNestedProcessor:
             and not nested_container_starts.ulist_index
             and not nested_container_starts.olist_index
         ):
-            assert active_container_index == grab_bag.end_container_indices.block_index
+            assert (
+                active_container_index == grab_bag.end_container_indices.block_index
+            ), "Without a list start index, the active container must be a block quote."
             POGGER.debug(
                 "parser_state.nested_list_start>>$<<",
                 parser_state.nested_list_start,
@@ -428,7 +451,9 @@ class ContainerBlockNestedProcessor:
             POGGER.debug(
                 "parser_state.token_document>>$<<", parser_state.token_document
             )
-            if parser_state.nested_list_start and grab_bag.adj_line_to_parse.strip():
+            if parser_state.nested_list_start and grab_bag.adj_line_to_parse.strip(
+                Constants.ascii_whitespace
+            ):
                 (
                     grab_bag.start_index,
                     indent_level,
@@ -453,6 +478,51 @@ class ContainerBlockNestedProcessor:
         )
 
     @staticmethod
+    def __adjust_line_2_a(
+        parser_state: ParserState, grab_bag: ContainerGrabBag
+    ) -> None:
+        POGGER.debug("\n\nBOOM\n\n")
+        POGGER.debug("parser_state.token_stack=$", parser_state.token_stack)
+        POGGER.debug("parser_state.token_document=$", parser_state.token_document)
+        POGGER.debug("container_level_tokens=$", grab_bag.container_tokens)
+
+        ending_blank_line_tokens = []
+        while parser_state.token_document[-1].is_blank_line:
+            ending_blank_line_tokens.append(parser_state.token_document[-1])
+            del parser_state.token_document[-1]
+
+        x_tokens, _ = parser_state.close_open_blocks_fn(
+            parser_state,
+            include_lists=True,
+        )
+        # test_extra_049l8b - if ct and xt at all end-li and end-bq, empty ct.
+        are_x_tokens_all_container_end_tokens = False
+        if x_tokens:
+            are_x_tokens_all_container_end_tokens = all(
+                (x.is_list_end or x.is_block_quote_end) for x in x_tokens
+            )
+        are_container_tokens_all_container_end_tokens = False
+        if grab_bag.container_tokens:
+            are_container_tokens_all_container_end_tokens = all(
+                (x.is_list_end or x.is_block_quote_end)
+                for x in grab_bag.container_tokens
+            )
+
+        if (
+            are_x_tokens_all_container_end_tokens
+            and are_container_tokens_all_container_end_tokens
+        ):
+            parser_state.token_document.extend(grab_bag.container_tokens)
+            grab_bag.clear_container_tokens()
+        parser_state.token_document.extend(x_tokens)
+
+        parser_state.token_document.extend(ending_blank_line_tokens)
+
+        POGGER.debug("parser_state.token_stack=$", parser_state.token_stack)
+        POGGER.debug("parser_state.token_document=$", parser_state.token_document)
+        POGGER.debug("container_level_tokens=$", grab_bag.container_tokens)
+
+    @staticmethod
     def __adjust_line_2(
         parser_state: ParserState,
         indent_level: int,
@@ -460,24 +530,19 @@ class ContainerBlockNestedProcessor:
         indent_was_adjusted: bool,
         grab_bag: ContainerGrabBag,
     ) -> bool:
+        """
+        Handle the case where the document currently ends with blank lines, but there
+        are end list and end block quote tokens that need to be processed ahead of the
+        blank line.  This occurs because the blank line forced the end container tokens
+        to occur, and just needs to be rearranged to make sense.
+        """
+
         if (
             parser_state.token_document[-1].is_blank_line
             and (grab_bag.end_container_indices.block_index + grab_bag.start_index)
             < indent_level
         ):
-            POGGER.debug("\n\nBOOM\n\n")
-
-            y_tokens = []
-            while parser_state.token_document[-1].is_blank_line:
-                y_tokens.append(parser_state.token_document[-1])
-                del parser_state.token_document[-1]
-
-            x_tokens, _ = parser_state.close_open_blocks_fn(
-                parser_state,
-                include_lists=True,
-            )
-            parser_state.token_document.extend(x_tokens)
-            parser_state.token_document.extend(y_tokens)
+            ContainerBlockNestedProcessor.__adjust_line_2_a(parser_state, grab_bag)
         elif (
             not nested_container_starts.block_index
             and grab_bag.adj_line_to_parse
@@ -485,28 +550,36 @@ class ContainerBlockNestedProcessor:
             and indent_was_adjusted
             and parser_state.nested_list_start
         ):
-            assert parser_state.nested_list_start is not None
+            assert (
+                parser_state.nested_list_start is not None
+            ), "The nested list start cannot be None."
         return False
 
+    # pylint: disable=too-many-locals
     @staticmethod
     def __calculate_initial_list_adjustments(
         parser_state: ParserState,
         adj_line_to_parse: str,
         end_container_indices: ContainerIndices,
     ) -> Tuple[int, int, bool, int]:
-        start_index, _ = ParserHelper.extract_spaces(adj_line_to_parse, 0)
-        assert start_index is not None
+        start_index, _ = ParserHelper.extract_spaces_verified(adj_line_to_parse, 0)
         POGGER.debug("start_index>>$<<", start_index)
 
-        assert parser_state.nested_list_start is not None
-        assert parser_state.nested_list_start.matching_markdown_token is not None
+        assert (
+            parser_state.nested_list_start is not None
+        ), "The nested list start cannot be None."
+        assert (
+            parser_state.nested_list_start.matching_markdown_token is not None
+        ), "List stack starts always have matching markdown tokens."
         POGGER.debug(
             "parser_state.nested_list_start.matching_markdown_token>>$<<",
             parser_state.nested_list_start.matching_markdown_token,
         )
-        list_start_token_index = parser_state.token_document.index(
-            parser_state.nested_list_start.matching_markdown_token
+        mmt_list = cast(
+            ListStartMarkdownToken,
+            parser_state.nested_list_start.matching_markdown_token,
         )
+        list_start_token_index = parser_state.token_document.index(mmt_list)
         POGGER.debug(
             "list_start_token_index>>$<<",
             list_start_token_index,
@@ -519,14 +592,27 @@ class ContainerBlockNestedProcessor:
                 "token_after_list_start>>$<<",
                 token_after_list_start,
             )
+            if token_after_list_start.is_setext_heading:
+                setext_token_after_list_start = cast(
+                    SetextHeadingMarkdownToken, token_after_list_start
+                )
+                line_number = setext_token_after_list_start.original_line_number
+                column_number = setext_token_after_list_start.original_column_number
+            else:
+                line_number = token_after_list_start.line_number
+                column_number = token_after_list_start.column_number
             assert (
-                parser_state.nested_list_start.matching_markdown_token.line_number
-                == token_after_list_start.line_number
+                mmt_list.line_number == line_number
+            ), "Token after the list start must have the same line number as the list start."
+
+            total_list_start = (
+                mmt_list.list_start_content + mmt_list.list_start_sequence
             )
-            column_number_delta = (
-                token_after_list_start.column_number
-                - parser_state.nested_list_start.matching_markdown_token.column_number
-            )
+            column_number_delta = column_number - mmt_list.column_number
+            if token_after_list_start.is_blank_line and column_number_delta == len(
+                total_list_start
+            ):
+                column_number_delta += 1
         else:
             column_number_delta = 0
         POGGER.debug(
@@ -549,6 +635,8 @@ class ContainerBlockNestedProcessor:
         indent_level = column_number_delta + end_container_indices.block_index
 
         return start_index, indent_level, indent_was_adjusted, indent_level_delta
+
+    # pylint: enable=too-many-locals
 
     # pylint: disable=too-many-arguments
     @staticmethod

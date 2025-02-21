@@ -1,8 +1,12 @@
 """
 Module to help with the parsing of backslash inline elements.
 """
+
 import logging
 
+from pymarkdown.container_blocks.parse_block_pass_properties import (
+    ParseBlockPassProperties,
+)
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.parser_logger import ParserLogger
 from pymarkdown.inline.inline_character_reference_helper import (
@@ -26,7 +30,9 @@ class InlineBackslashHelper:
 
     @staticmethod
     def handle_inline_backslash(
-        inline_request: InlineRequest, add_text_signature: bool = True
+        parser_properties: ParseBlockPassProperties,
+        inline_request: InlineRequest,
+        add_text_signature: bool = True,
     ) -> InlineResponse:
         """
         Handle the inline case of having a backslash.
@@ -74,7 +80,9 @@ class InlineBackslashHelper:
         return inline_response
 
     @staticmethod
-    def handle_backslashes(source_text: str) -> str:
+    def handle_backslashes(
+        parser_properties: ParseBlockPassProperties, source_text: str
+    ) -> str:
         """
         Handle the processing of backslashes for anything other than the text
         blocks, which have additional needs for parsing.
@@ -94,24 +102,25 @@ class InlineBackslashHelper:
             POGGER.debug("handle_backslashes>>$>>", current_char)
             if current_char == InlineBackslashHelper.backslash_character:
                 inline_response = InlineBackslashHelper.handle_inline_backslash(
-                    inline_request, add_text_signature=False
+                    parser_properties, inline_request, add_text_signature=False
                 )
             else:
                 assert (
                     source_text[next_index]
                     == InlineCharacterReferenceHelper.character_reference_start_character
-                )
+                ), "If not a backslahs, must be a character reference character."
                 inline_response = (
                     InlineCharacterReferenceHelper.handle_character_reference(
-                        inline_request
+                        parser_properties, inline_request
                     )
                 )
             new_string, new_index = (
                 inline_response.new_string,
                 inline_response.new_index,
             )
-            assert new_string is not None
-            assert new_index is not None
+            assert (
+                new_string is not None and new_index is not None
+            ), "String and index results must be valid."
             POGGER.debug("handle_backslashes<<$<<$", new_string, new_index)
             string_parts.append(new_string)
             start_index = new_index

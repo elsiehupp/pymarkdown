@@ -1,6 +1,7 @@
 """
 Module to provide for a local instance of an InProcessExecution class.
 """
+
 import os
 import sys
 from test.pytest_execute import InProcessExecution
@@ -43,6 +44,7 @@ class AlternateMainPresentation(MainPresentation):
         next_file: str,
         this_exception: Exception,
         show_extended_information: bool = False,
+        allow_shortcut: bool = False,
     ) -> Optional[str]:
         """
         Format a scan error for display.  Returning a value of None means that

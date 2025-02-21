@@ -1,6 +1,260 @@
 # Change Log
 
-## Unversioned - In Main, Not Released
+This changelog is kept here for historical purposes.  For
+the current changelog, goto our
+[documentation site](https://pymarkdown.readthedocs.io/en/latest/changelog/).
+
+## Version 0.9.19 - Date: 2024-04-30
+
+This release focuses on getting the documentation up to date
+and in the new read-the-docs format.  Some small issues were
+addressed, but this is mainly to get the documents into good
+shape for release.
+
+To view the new documentation, goto
+[ReadTheDocs](https://pymarkdown.readthedocs.io/en/latest/).
+
+### Added
+
+- [Issue 801](https://github.com/jackdewinter/pymarkdown/issues/801)
+  - Started movement of docs from README.md and docs directory to
+    the newdocs directory with a shorter README.md.
+- [Issue 1059](https://github.com/jackdewinter/pymarkdown/issues/1059)
+  - Complete redo of pre-commit documentation.
+- [Issue 1070](https://github.com/jackdewinter/pymarkdown/issues/1070)
+  - Complete redo of advanced configuration documentation.
+
+### Fixed
+
+- None
+
+### Changed
+
+- [Issue 1031](https://github.com/jackdewinter/pymarkdown/issues/1031)
+  - went through code base and used if/else expressions where possible
+- [Issue 1033](https://github.com/jackdewinter/pymarkdown/issues/1033)
+  - went through tests for Md007, add some extra tests to cover missed scenarios
+- [Issue 1037](https://github.com/jackdewinter/pymarkdown/issues/1037)
+  - replaced calls to collect/extract ParserHelper functions followed by
+    asserts with X_verified functions that do that already
+- [Issue 1039](https://github.com/jackdewinter/pymarkdown/issues/1039)
+  - ensure that all asserts have a message with their reasoning
+  - verify that the asserts are required, refactoring where necessary
+
+## Version 0.9.18 - Date: 2024-03-18
+
+### Added
+
+- [Issue 990](https://github.com/jackdewinter/pymarkdown/issues/990)
+  - added ability to use a TOML file in `pyproject.toml` format with the
+    `--config` command line flag
+
+### Fixed
+
+- [Issue 992](https://github.com/jackdewinter/pymarkdown/issues/992)
+  - Verified behavior of Rule Md009, fixing some small issues
+- [Issue 994](https://github.com/jackdewinter/pymarkdown/issues/994)
+  - Verified behavior of Rule Md029, adding configuration for starting ordered
+    lists from integers greater than 1
+- [Issue 1001](https://github.com/jackdewinter/pymarkdown/issues/1001)
+  - Verified behavior of rules Md019 and Md021, fixing issues with Md021
+- [Issue 1003](https://github.com/jackdewinter/pymarkdown/issues/1003)
+  - Verified behavior of rule Md037 with more types of inline elements
+- [Issue 1007](https://github.com/jackdewinter/pymarkdown/issues/1007)
+  - Verified behavior of rule md023 with more cases, especially tab characters
+  - multiple cases of fixing the rule and multiple cases of fixing the parser
+- [Issue 1015](https://github.com/jackdewinter/pymarkdown/issues/1015)
+  - Fixed issue with split tab and a simple list indent
+
+### Changed
+
+- [Issue 944](https://github.com/jackdewinter/pymarkdown/issues/944)
+  - verified that all existing fix tests are parameterized
+  - new fix tests for rule going forward will require this
+- [Issue 1005](https://github.com/jackdewinter/pymarkdown/issues/1005)
+  - verified behavior of rule Md039
+  - added link reference defintion's link title to the previous list
+    of link title and image's link title for examination
+- [Issue 1007](https://github.com/jackdewinter/pymarkdown/issues/1007)
+  - changed GHA workflow to be more precise when unable to start remote job
+
+## Version 0.9.17 - Date: 2024-02-05
+
+This release focuses on getting the feature list complete
+for a version 1.0 release in early 2024.  This release marked the
+start of moving documentation from this repository to the more
+curated [ReadTheDocs](https://pymarkdown.readthedocs.io/en/latest/).
+
+Some notable additions/changes are:
+
+- taking a second pass at the outputs from the recent `fix` addition, re-verifying
+  the output and fixing any issues
+- cleaning up documentation to properly note what type of whitespace is used
+  in the core and well as various extensions and plugins
+  - at the same time, clearly followed the specification on what kind of whitespace
+    to use, instead of allowing unicode whitespace by default
+- for parsers like Python-Markdown, used in the MkDocs tools, added Rule Pml101
+  to handle the different indentation requirements
+  - note that this new rule give advice against Md007, so only one of the two
+    rules should be enabled at any one time
+
+### Added
+
+- [Issue 975](https://github.com/jackdewinter/pymarkdown/issues/975)
+  - Added a new rule Pml101 to deal with "anchored list indents"
+  - This adds support for `Python-Markdown` and other parsers like it
+    - Used by tools such as `mkdocs` to build documentation sites
+  - Defaults to an indent of 4 that starts from the beginning of the line or
+    after a block quote start
+  - Updated documentation for Md007 to mention Pml101 and when to use it
+- [Issue 983](https://github.com/jackdewinter/pymarkdown/issues/983)
+  - Added base foundation for new documentation, publishing on
+    read-the-docs.
+
+### Fixed
+
+- [Issue 929](https://github.com/jackdewinter/pymarkdown/issues/929)
+  - second try, specifically missing github blob reference in urls
+- [Issue 945](https://github.com/jackdewinter/pymarkdown/issues/945)
+  - inconsistent splitting of whitespace caused some issues
+  - went through all strip() calls and ensured that they have the
+    specific type of whitespace identified and documented
+- [Issue 964](https://github.com/jackdewinter/pymarkdown/issues/964)
+  - final fix states needed verification and fixing of any issues
+  - uncovered and fixed issues in Md007, Md019, and Md029
+- [Issue 977](https://github.com/jackdewinter/pymarkdown/issues/977)
+  - fixed issue with md019 continuing to search for text blocks once the
+    heading was completed
+  - verified that Md021 does not have the same issue, but added tests to be sure
+- [Issue 981](https://github.com/jackdewinter/pymarkdown/issues/981)
+  - added documentation for Rule Pml100
+  - cleaned up mentions of whitespace in pragma and front matter extensions
+- [Issue 986](https://github.com/jackdewinter/pymarkdown/issues/986)
+  - initial setting of log level to DEBUG with `--stack-trace` command line
+    flag not working as expected
+  - fixed to properly set log level to DEBUG for early application debugging
+
+### Changed
+
+- [Issue 966](https://github.com/jackdewinter/newsite.git)
+  - adjusted fix for Md009 to remove any trailing whitespace if the line is within
+    an Atx Heading
+
+## Version 0.9.16 - Date: 2024-01-20
+
+This release is going to focus on getting the feature list complete
+for a version 1.0 release in early 2024.  To a large extent, this
+involves adding the "fix" feature for some rules, and double checking
+the output of many of the existing rules, looking for missing issues.
+
+Some other notable additions/changes are:
+
+- the `--continue-on-error` command line flag allows PyMarkdown to
+  continue processing after any tokenization error or plugin error
+  - while we hope this is not necessary long term, it is useful
+- added `py.typed` file for any API users
+  - this allows mypy to understand the typing included with the
+    PyMarkdown API
+- more parameterized tests
+  - borrowing a pattern we have observed, transitioning scenario tests
+    over to this new pattern
+  - any plugin with the new Fix feature has parameterized tests
+
+### Added
+
+- [Issue 618](https://github.com/jackdewinter/pymarkdown/issues/618)
+  - Ability to tell PyMarkdown to fix issues
+  - Not every plugin supports fix, see `pymarkdown plugins list` for
+    the current list of plugins and fix status
+- [Issue 802](https://github.com/jackdewinter/pymarkdown/issues/802)
+  - Extension: Extended Autolinks
+- [Issue 803](https://github.com/jackdewinter/pymarkdown/issues/803)
+  - Extension: Strikethrough
+- [Issue 805](https://github.com/jackdewinter/pymarkdown/issues/805)
+  - Extension: Task List Items
+- [Issue 808](https://github.com/jackdewinter/pymarkdown/issues/808)
+  - Rule MD004 - Added fix options
+- [Issue 809](https://github.com/jackdewinter/pymarkdown/issues/809)
+  - Rule MD007 - Added fix options
+- [Issie 813](https://github.com/jackdewinter/pymarkdown/issues/813)
+  - Rule MD019 - Added fix options
+- [Issue 814](https://github.com/jackdewinter/pymarkdown/issues/814)
+  - Rule MD021 - Added fix options
+- [Issue 816](https://github.com/jackdewinter/pymarkdown/issues/816)
+  - Rule MD023 - Added fix options
+- [Issue 817](https://github.com/jackdewinter/pymarkdown/issues/817)
+  - Rule MD029 - Added fix options
+- [Issue 820](https://github.com/jackdewinter/pymarkdown/issues/820)
+  - Rule MD035 - Added fix options
+- [Issue 821](https://github.com/jackdewinter/pymarkdown/issues/821)
+  - Rule MD037 - Added fix options
+- [Issue 822](https://github.com/jackdewinter/pymarkdown/issues/822)
+  - Rule MD038 - Added fix options
+- [Issue 823](https://github.com/jackdewinter/pymarkdown/issues/823)
+  - Rule MD039 - Added fix options
+- [Issue 825](https://github.com/jackdewinter/pymarkdown/issues/825)
+  - Rule MD048 - Added fix options
+- [Issue 931](https://github.com/jackdewinter/pymarkdown/issues/931)
+  - Rule MD005 - Added fix options
+- [Issue 938](https://github.com/jackdewinter/pymarkdown/issues/938)
+  - Rule MD027 - Added fix options
+- [Issue 940](https://github.com/jackdewinter/pymarkdown/issues/940)
+  - Rule MD006 (disabled) - Added fix options
+- [Issue 941](https://github.com/jackdewinter/pymarkdown/issues/941)
+  - Rule MD030 - Added fix options
+- [Issue 946](https://github.com/jackdewinter/pymarkdown/issues/946)
+  - Added `--continue-on-error` command line flag to "ignore" errors
+    and to keep on processing.
+
+### Changed
+
+- [Issue 806](https://github.com/jackdewinter/pymarkdown/issues/806)
+  - Documentation updated to denote fixes.
+- [Issue 812](https://github.com/jackdewinter/pymarkdown/issues/812)
+  - Rule MD014 - Changed documentation to describe why not autofix
+- [Issue 827](https://github.com/jackdewinter/pymarkdown/issues/827)
+  - Finished research on which rules are fixable and sorted.
+- [Issue 901](https://github.com/jackdewinter/pymarkdown/issues/901)
+  - noticed cases where `len(x)` was being used instead of `x` or `not x`
+- [Issue 913](https://github.com/jackdewinter/pymarkdown/issues/913)
+  - making proper use of is_xxx_end function from MarkdownToken class
+- [Issue 934](https://github.com/jackdewinter/pymarkdown/issues/934)
+  - fix mode scans multiple times, with each scan producing lots of logs if
+    on DEBUG
+  - first fix was to allow a new command line option to suppress logs on any
+    scan in fix mode past the first one
+  - other fix was to make a clearer message when two rules trigger on the
+    same field of the same token
+- [Issue 936](https://github.com/jackdewinter/pymarkdown/issues/936)
+  - change documentation for rules that will not have a fix
+
+### Fixed
+
+- [Issue 929](https://github.com/jackdewinter/pymarkdown/issues/929)
+  - Improper links in README.md when viewed at PyPi.org.
+- [Issue 930](https://github.com/jackdewinter/pymarkdown/issues/930)
+  - Fixed issue of missing `py.typed` file.
+
+### Completed
+
+- [Issue 827](https://github.com/jackdewinter/pymarkdown/issues/827)
+  - researched annotated each rule
+  - rules "in queue" have no annotation yet, ones that have fixes have docs
+    updated, ones that are not eligible have reason why
+
+## Version 0.9.15 - Date: 2023-12-05
+
+This release is mainly to fix issues related to technical debt. The PyMarkdown
+project takes Markdown and generates a token stream to represent that Markdown.
+To verify that the tokens are correct, HTML output is generated and matched
+against reference implementations of the specification.  If those pass, the tests
+then try to recreate the Markdown from the information in the tokens. So, to pass
+a single test, the Markdown must generate tokens without any assertions, generate
+the correct HTML, and be able to recreate the Markdown that it parsed.
+
+The issues fixed include some issues that fixed assertions, caused improperly
+formed HTML, and caused improperly formed Markdown. The majority of these issue
+involved tab characters and containers.
 
 ### Added
 
@@ -12,7 +266,129 @@
 
 ### Fixed
 
-- None
+- [Issue 731](https://github.com/jackdewinter/pymarkdown/issues/731)
+  - see issue for details.  fixed issues with unorder-bq-ordered that
+    need more examination in the future
+- [Issue 828](https://github.com/jackdewinter/pymarkdown/issues/828)
+  - list new items within block quotes were not always rendering properly
+    in Markdown, required changes to markdown regen
+- [Issue 829](https://github.com/jackdewinter/pymarkdown/issues/829)
+  - fixed issue with BlockQuoteData instance not being passed back
+    properly.  as a result, one closing of a block quote was not noticed
+    by another closing further down the line
+- [Issue 832](https://github.com/jackdewinter/pymarkdown/issues/832)
+  - partially fixed by other work, partial issue with the HTML output showing
+    spaces instead of tabs, could be slightly different versions of commonmark
+    tests
+- [Issue 833](https://github.com/jackdewinter/pymarkdown/issues/833)
+  - not handling the split tab properly in these cases
+- [Issue 834](https://github.com/jackdewinter/pymarkdown/issues/834)
+  - issues were tabs that were split on the same line as a list start
+- [Issue 835](https://github.com/jackdewinter/pymarkdown/issues/835)
+  - a double block quote follwed by a fenced block in a single block quote
+    was not properly closing
+- [Issue 836](https://github.com/jackdewinter/pymarkdown/issues/836)
+  - these cases were hitting split tab cases within processing for fenced code
+    blocks
+- [Issue 837](https://github.com/jackdewinter/pymarkdown/issues/836)
+  - these cases were split tab cases where the text to compare to its detabified
+    forms was incorrect, resulting in a failed match
+- [Issue 838](https://github.com/jackdewinter/pymarkdown/issues/838)
+  - extra tab was showing up in double list scenarios where indented block
+    start was split over the last list and the indented block
+- [Issue 839](https://github.com/jackdewinter/pymarkdown/issues/839)
+  - handling of split tabs within lists was not added at all, causing an assert
+    to fire
+- [Issue 840](https://github.com/jackdewinter/pymarkdown/issues/840)
+  - was not properly looking up in tabbed map when rendering
+- [Issue 841](https://github.com/jackdewinter/pymarkdown/issues/841)
+  - fixed issue with assert
+  - had commented out branch because no cases were found, finally found one
+  - spawned other issues to fix less serious issues
+- [Issue 842](https://github.com/jackdewinter/pymarkdown/issues/842)
+  - fixed problem with HTML and lists and split tabs causing assertions
+  - spawned other issues to fix less serious issues
+- [Issue 843](https://github.com/jackdewinter/pymarkdown/issues/843)
+  - whitespace check not being suspended for one check caused the html block
+    not to be closed
+- [Issue 848](https://github.com/jackdewinter/pymarkdown/issues/848)
+  - indent spacing within containers causing tab to not be changed back
+    properly
+- [Issue 849](https://github.com/jackdewinter/pymarkdown/issues/849)
+  - in cases with double lists, split tab can sometimes get missed
+- [Issue 850](https://github.com/jackdewinter/pymarkdown/issues/850)
+  - some of the lines we adding whitespace for both the bq indent (already taken
+    care of) and the list, resulting in too many spaces
+  - tab support added to those cases
+- [Issue 852](https://github.com/jackdewinter/pymarkdown/issues/852)
+  - fixed bad tokenization. previous fix was improper, causing strings to
+    be improperly indexed into to fix spacing issue
+  - spawned other issues to fix less serious issues
+- [Issue 854](https://github.com/jackdewinter/pymarkdown/issues/854)
+  - "fixed".  not sure why this happened, and will probably open another issue
+    to properly figure this out at a later date
+  - in cases where a list is within a block quote, and the next line is a paragraph
+    continuation that fails the requirements for a "normal" list continuation, this
+    fix was required.
+- [Issue 857](https://github.com/jackdewinter/pymarkdown/issues/857)
+  - fixed along with Issue 840, just filed separately
+- [Issue 878](https://github.com/jackdewinter/pymarkdown/issues/878)
+  - a doubly indented list with a new paragraph continuation line starting
+    with multiple tabs was not capturing the first tab properly in the list
+- [Issue 888](https://github.com/jackdewinter/pymarkdown/issues/888)
+  - during fixing of 731, found some outside cases which were throwing asserts
+    as they were outside of normal paths
+  - mostly dealt with proper spacing with block quotes nested within lists.
+- [Issue 889](https://github.com/jackdewinter/pymarkdown/issues/889)
+  - cleaned up issue with MD032 firing with nested blocks.
+- [Issue 891](https://github.com/jackdewinter/pymarkdown/issues/891)
+  - fixed up Markdown issues with regenerating.  Cause was improper adding
+    of an extra newline in the leading spaces
+
+## Version 0.9.14 - Date: 2023-10-31
+
+This release is mostly to incorporate a number of small fixes and additions.
+Behind the scenes, we spent a while looking at the roadmap and trying to figure
+out the best path going forward.  Part of that was experimenting with different
+forms of testing, to see how applicable they would be to this project.  That
+work will be starting soon and be incremental.  It also pointed out a need for
+better documentation, which will also be incremental going forward.
+
+That experimentation lead to a couple of changes:
+
+- Front matter is now interpretted as strict YAML, and not as some mashup of rules.
+  This was decided on as it easier to explain and document.  This may cause some
+  existing front-matter settings to not work as expected, especially validation
+  of the front-matter itself and case-sensitivity on front-matter key fields.
+- Added a new pragma command `disable-num-lines` to handle disabling rules for
+  a given count of lines.
+
+### Added
+
+- [Issue 776](https://github.com/jackdewinter/pymarkdown/issues/776)
+  - implement `disable-num-lines` pragma command
+- [Issue 786](https://github.com/jackdewinter/pymarkdown/issues/786)
+  - added extension to disallow html, per GFM
+  - added rule PML100 which detected the same thing, but does not fix
+
+### Changed
+
+- [Issue 750](https://github.com/jackdewinter/pymarkdown/issues/750)
+  - started work on making the tests more compact and efficient
+
+### Fixed
+
+- [Issue 774](https://github.com/jackdewinter/pymarkdown/issues/774)
+  - was following "weird" rules, changed to allow for standard YAML parser to
+    determine validity
+  - changed rule `md001` to look for case sensitive front-matter key name instead
+    of case sensitive per switch to full YAML processing
+- [Issue 791](https://github.com/jackdewinter/pymarkdown/issues/791)
+  - html blocks inside of 2+ levels of block quote was asserting
+  - slight change to surrounding code to deal with less than case
+- [Issue 793](https://github.com/jackdewinter/pymarkdown/issues/793)
+  - list block end with no paragraphs was causing an assert with MD027
+  - double checked assert, is not needed and was just preventative
 
 ## Version 0.9.13.4 - Date: 2023-09-09
 

@@ -1,6 +1,7 @@
 """
 Module to provide for an element that can be added to the stack.
 """
+
 from typing import Any, List, Optional
 
 from pymarkdown.general.parser_helper import ParserHelper
@@ -63,7 +64,7 @@ class StackToken:
         """
         Overrides the default implementation
         """
-        assert isinstance(other, StackToken)
+        assert isinstance(other, StackToken), "Cover other objects."
         return self.type_name == other.type_name and self.extra_data == other.extra_data
 
     @property
@@ -105,7 +106,9 @@ class StackToken:
         Generate the token emitted to close off the current stack token
         """
 
-        assert self._stack_link_definition != self.type_name
+        assert (
+            self._stack_link_definition != self.type_name
+        ), "A stack LRD token must never create a matching close token."
         assert self.matching_markdown_token, str(self)
 
         return EndMarkdownToken(
@@ -480,7 +483,7 @@ class LinkDefinitionStackToken(StackToken):
     """
 
     def __init__(
-        self, extracted_whitespace: Optional[str], position_marker: PositionMarker
+        self, extracted_whitespace: str, position_marker: PositionMarker
     ) -> None:
         (
             self.__extracted_whitespace,
@@ -563,7 +566,7 @@ class LinkDefinitionStackToken(StackToken):
         """
 
         return (
-            f"{ParserHelper.newline_character.join(self.continuation_lines) }"
+            f"{ParserHelper.newline_character.join(self.continuation_lines)}"
             + f"{ParserHelper.newline_character}{join_suffix}"
             if self.continuation_lines
             else join_suffix

@@ -1,6 +1,7 @@
 """
 Module to implement a plugin to ensure all files end with a blank line.
 """
+
 from pymarkdown.plugin_manager.plugin_details import PluginDetails, PluginDetailsV2
 from pymarkdown.plugin_manager.plugin_scan_context import PluginScanContext
 from pymarkdown.plugin_manager.rule_plugin import RulePlugin
@@ -24,9 +25,10 @@ class RuleMd047(RulePlugin):
             plugin_id="MD047",
             plugin_enabled_by_default=True,
             plugin_description="Each file should end with a single newline character.",
-            plugin_version="0.5.0",
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md047.md",
+            plugin_version="0.5.1",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md047.md",
             plugin_supports_fix=True,
+            plugin_fix_level=0,
         )
 
     def starting_new_file(self) -> None:

@@ -1,6 +1,7 @@
 """
 Module to implement a plugin that ensures that Block Quote elements are surrounded by Blank Lines.
 """
+
 from typing import List, cast
 
 from pymarkdown.plugin_manager.plugin_details import PluginDetails
@@ -35,7 +36,7 @@ class RuleMd028(RulePlugin):
             plugin_description="Blank line inside blockquote",
             plugin_version="0.5.0",
             plugin_interface_version=1,
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md028.md",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md028.md",
         )
 
     def starting_new_file(self) -> None:

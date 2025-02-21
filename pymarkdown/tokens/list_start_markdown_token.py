@@ -4,7 +4,9 @@ Module to provide for an encapsulation of a generic list start element.
 
 # pylint: disable=too-many-instance-attributes
 import logging
-from typing import Optional
+from typing import Optional, Union
+
+from typing_extensions import override
 
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.parser_logger import ParserLogger
@@ -113,20 +115,28 @@ class ListStartMarkdownToken(ContainerMarkdownToken):
         """
         return self.__leading_spaces
 
+    def reset_last_list_item(self) -> None:
+        """
+        Reset the last new list token seens for this list.
+        """
+        self.__last_new_list_token = None
+
     def adjust_for_new_list_item(
-        self, new_list_item_token: NewListItemMarkdownToken
+        self,
+        new_list_item_token: NewListItemMarkdownToken,
+        skip_adjustment: bool = False,
     ) -> None:
         """
         Adjust this token for a new list item (uses copy to keep track).
         """
-        assert new_list_item_token and new_list_item_token.is_new_list_item
-
+        # assert new_list_item_token and new_list_item_token.is_new_list_item
         self.__last_new_list_token = new_list_item_token
 
-        self.__indent_level, self.__extracted_whitespace = (
-            new_list_item_token.indent_level,
-            new_list_item_token.extracted_whitespace,
-        )
+        if not skip_adjustment:
+            self.__indent_level, self.__extracted_whitespace = (
+                new_list_item_token.indent_level,
+                new_list_item_token.extracted_whitespace,
+            )
 
     def __compose_extra_data_field(self) -> None:
         """
@@ -161,14 +171,16 @@ class ListStartMarkdownToken(ContainerMarkdownToken):
         """
         Remove the last leading space and return it.
         """
-        assert self.__leading_spaces is not None
+        assert (
+            self.__leading_spaces is not None
+        ), "Leading spaces must be defined by now."
         last_separator_index = self.__leading_spaces.rfind("\n")
-        assert last_separator_index == -1
-        extracted_text = self.__leading_spaces
-        self.__leading_spaces = None
-        # else:
-        #     extracted_text = self.__leading_spaces[last_separator_index:]
-        #     self.__leading_spaces = self.__leading_spaces[:last_separator_index]
+        if last_separator_index == -1:
+            extracted_text = self.__leading_spaces
+            self.__leading_spaces = None
+        else:
+            extracted_text = self.__leading_spaces[last_separator_index + 1 :]
+            self.__leading_spaces = self.__leading_spaces[:last_separator_index]
         self.__compose_extra_data_field()
         return extracted_text
 
@@ -199,6 +211,30 @@ class ListStartMarkdownToken(ContainerMarkdownToken):
         """
         self.__extracted_whitespace = new_whitespace
         self.__compose_extra_data_field()
+
+    @override
+    def _modify_token(self, field_name: str, field_value: Union[str, int]) -> bool:
+        if field_name == "list_start_content" and isinstance(field_value, str):
+            self.__list_start_content = field_value
+            self.__compose_extra_data_field()
+            return True
+        if field_name == "list_start_sequence" and isinstance(field_value, str):
+            self.__list_start_sequence = field_value
+            self.__compose_extra_data_field()
+            return True
+        if field_name == "extracted_whitespace" and isinstance(field_value, str):
+            self.__extracted_whitespace = field_value
+            self.__compose_extra_data_field()
+            return True
+        if field_name == "indent_level" and isinstance(field_value, int):
+            self.__indent_level = field_value
+            self.__compose_extra_data_field()
+            return True
+        if field_name == "leading_spaces" and isinstance(field_value, str):
+            self.__leading_spaces = field_value
+            self.__compose_extra_data_field()
+            return True
+        return super()._modify_token(field_name, field_value)
 
 
 # pylint: enable=too-many-instance-attributes

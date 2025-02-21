@@ -1,6 +1,7 @@
 """
 https://github.com/jackdewinter/pymarkdown/issues/456
 """
+
 from test.utils import act_and_assert
 
 import pytest
@@ -262,7 +263,6 @@ def test_whitespaces_block_quotes_with_tabs_triple_space_space_tab_split_x():
 
 
 @pytest.mark.gfm
-@pytest.mark.skip
 def test_whitespaces_block_quotes_with_tabs_triple_space_space_tab_double():
     """
     Test case:  Block quotes preceeded by spaces.
@@ -296,7 +296,6 @@ block quote</p>
 
 
 @pytest.mark.gfm
-@pytest.mark.skip
 def test_whitespaces_block_quotes_with_tabs_triple_space_space_tab_split_double():
     """
     Test case:  Block quotes preceeded by spaces.
@@ -392,7 +391,6 @@ def test_whitespaces_block_quotes_with_tabs_triple_space_tab_split_space_x():
 
 
 @pytest.mark.gfm
-@pytest.mark.skip
 def test_whitespaces_block_quotes_with_tabs_triple_space_tab_space_double():
     """
     Test case:  Block quotes preceeded by spaces.
@@ -426,7 +424,6 @@ block quote</p>
 
 
 @pytest.mark.gfm
-@pytest.mark.skip
 def test_whitespaces_block_quotes_with_tabs_triple_space_tab_split_space_double():
     """
     Test case:  Block quotes preceeded by spaces.
@@ -522,7 +519,6 @@ def test_whitespaces_block_quotes_with_tabs_triple_space_tab_split_tab_split_x()
 
 
 @pytest.mark.gfm
-@pytest.mark.skip
 def test_whitespaces_block_quotes_with_tabs_triple_space_tab_tab_double():
     """
     Test case:  Block quotes preceeded by spaces.
@@ -556,8 +552,7 @@ block quote</p>
 
 
 @pytest.mark.gfm
-@pytest.mark.skip
-def test_whitespaces_block_quotes_with_tabs_triple_space_tab_split_tab_split_double():
+def test_whitespaces_block_quotes_with_tabs_triple_space_tab_split_tab_split_double_x():
     """
     Test case:  Block quotes preceeded by spaces.
     """
@@ -577,6 +572,46 @@ def test_whitespaces_block_quotes_with_tabs_triple_space_tab_split_tab_split_dou
         "[end-block-quote:::True]",
     ]
     expected_gfm = """<blockquote>
+<blockquote>
+<blockquote>
+<p>block quote
+block quote</p>
+</blockquote>
+</blockquote>
+</blockquote>"""
+
+    # Act & Assert
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
+
+
+@pytest.mark.gfm
+def test_whitespaces_block_quotes_with_tabs_triple_space_tab_split_tab_split_double_with_prefix():
+    """
+    Test case:  Block quotes preceeded by spaces.
+    """
+
+    # Arrange
+    source_markdown = """This is just some text.
+ 
+>\t>\t> block quote
+>\t>\t> block quote"""
+    expected_tokens = [
+        "[para(1,1):]",
+        "[text(1,1):This is just some text.:]",
+        "[end-para:::True]",
+        "[BLANK(2,1): ]",
+        "[block-quote(3,1)::> ]",
+        "[block-quote(3,5)::>   > ]",
+        '[block-quote(3,9)::>   >   > \n>   >   > :{0: ">\\t>\\t> ", 1: ">\\t>\\t> "}]',
+        "[para(3,11):\n]",
+        "[text(3,11):block quote\nblock quote::\n]",
+        "[end-para:::True]",
+        "[end-block-quote:::True]",
+        "[end-block-quote:::True]",
+        "[end-block-quote:::True]",
+    ]
+    expected_gfm = """<p>This is just some text.</p>
+<blockquote>
 <blockquote>
 <blockquote>
 <p>block quote
@@ -717,7 +752,6 @@ def test_whitespaces_block_quotes_with_formfeeds():
 
 
 @pytest.mark.gfm
-@pytest.mark.skip
 def test_whitespaces_block_quotes_with_xtabs():
     """
     Test case:  Block quotes preceeded by spaces and tabs.
@@ -731,7 +765,7 @@ def test_whitespaces_block_quotes_with_xtabs():
         "[para(1,4):]",
         "[text(1,4):block quote:]",
         "[end-para:::True]",
-        "[block-quote(2,5):: >  > ]",
+        '[block-quote(2,5):: >  > :{0: " >\\t> "}]',
         "[para(2,7):]",
         "[text(2,7):another block quote:]",
         "[end-para:::True]",
@@ -750,7 +784,6 @@ def test_whitespaces_block_quotes_with_xtabs():
 
 
 @pytest.mark.gfm
-@pytest.mark.skip
 def test_whitespaces_block_quotes_with_tabs_x2():
     """
     Test case:  Block quotes preceeded by spaces and tabs.
@@ -765,7 +798,7 @@ def test_whitespaces_block_quotes_with_tabs_x2():
         "[para(1,4):]",
         "[text(1,4):block quote:]",
         "[end-para:::True]",
-        "[block-quote(2,5):: >  > \n >  > ]",
+        '[block-quote(2,5):: >  > \n >  > :{0: " >\\t> ", 1: " >\\t> "}]',
         "[para(2,7):\n]",
         "[text(2,7):another block quote\nsame block quote::\n]",
         "[end-para:::True]",

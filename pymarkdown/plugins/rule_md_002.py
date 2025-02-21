@@ -2,9 +2,14 @@
 Module to implement a plugin that looks to see if the first heading in a file is
 a top level heading.
 """
-from typing import cast
 
-from pymarkdown.plugin_manager.plugin_details import PluginDetails
+from typing import List, cast
+
+from pymarkdown.plugin_manager.plugin_details import (
+    PluginDetails,
+    PluginDetailsV3,
+    QueryConfigItem,
+)
 from pymarkdown.plugin_manager.plugin_scan_context import PluginScanContext
 from pymarkdown.plugin_manager.rule_plugin import RulePlugin
 from pymarkdown.tokens.atx_heading_markdown_token import AtxHeadingMarkdownToken
@@ -26,14 +31,13 @@ class RuleMd002(RulePlugin):
         """
         Get the details for the plugin.
         """
-        return PluginDetails(
+        return PluginDetailsV3(
             plugin_name="first-heading-h1,first-header-h1",
             plugin_id="MD002",
             plugin_enabled_by_default=False,
             plugin_description="First heading of the document should be a top level heading.",
-            plugin_version="0.5.0",
-            plugin_interface_version=1,
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md002.md",
+            plugin_version="0.6.0",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md002.md",
             plugin_configuration="level",
         )
 
@@ -52,6 +56,12 @@ class RuleMd002(RulePlugin):
             valid_value_fn=self.__validate_configuration_other_test_value,
         )
 
+    def query_config(self) -> List[QueryConfigItem]:
+        """
+        Query to find out the configuration that the rule is using.
+        """
+        return [QueryConfigItem("level", self.__start_level)]
+
     def starting_new_file(self) -> None:
         """
         Event that the a new file to be scanned is starting.
@@ -62,10 +72,11 @@ class RuleMd002(RulePlugin):
         """
         Event that a new token is being processed.
         """
-        hash_count = None
         if token.is_atx_heading or token.is_setext_heading:
             heading_token = cast(AtxHeadingMarkdownToken, token)
             hash_count = heading_token.hash_count
+        else:
+            hash_count = None
 
         if not self.__have_seen_first_heading and hash_count:
             self.__have_seen_first_heading = True

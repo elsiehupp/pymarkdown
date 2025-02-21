@@ -11,6 +11,14 @@
             "elapsedTimeInMilliseconds": 0
         },
         {
+            "name": "test.api.test_api_examples",
+            "totalTests": 7,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
             "name": "test.api.test_api_general",
             "totalTests": 4,
             "failedTests": 0,
@@ -52,7 +60,7 @@
         },
         {
             "name": "test.api.test_api_scan",
-            "totalTests": 14,
+            "totalTests": 24,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -195,6 +203,14 @@
             "elapsedTimeInMilliseconds": 0
         },
         {
+            "name": "test.basic.test_get_replacement_indices",
+            "totalTests": 4,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
             "name": "test.basic.test_html_tags",
             "totalTests": 29,
             "failedTests": 0,
@@ -219,6 +235,14 @@
             "elapsedTimeInMilliseconds": 0
         },
         {
+            "name": "test.extensions.test_disallowed_html",
+            "totalTests": 40,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
             "name": "test.extensions.test_extension_manager",
             "totalTests": 15,
             "failedTests": 0,
@@ -228,7 +252,7 @@
         },
         {
             "name": "test.extensions.test_markdown_front_matter",
-            "totalTests": 24,
+            "totalTests": 33,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -236,7 +260,7 @@
         },
         {
             "name": "test.extensions.test_markdown_pragma_parsing",
-            "totalTests": 12,
+            "totalTests": 14,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -244,7 +268,7 @@
         },
         {
             "name": "test.extensions.test_markdown_pragmas",
-            "totalTests": 14,
+            "totalTests": 32,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -276,10 +300,10 @@
         },
         {
             "name": "test.gfm.test_markdown_autolinks_extension",
-            "totalTests": 11,
+            "totalTests": 55,
             "failedTests": 0,
             "errorTests": 0,
-            "skippedTests": 11,
+            "skippedTests": 0,
             "elapsedTimeInMilliseconds": 0
         },
         {
@@ -316,15 +340,15 @@
         },
         {
             "name": "test.gfm.test_markdown_block_quotes",
-            "totalTests": 94,
+            "totalTests": 97,
             "failedTests": 0,
             "errorTests": 0,
-            "skippedTests": 2,
+            "skippedTests": 0,
             "elapsedTimeInMilliseconds": 0
         },
         {
             "name": "test.gfm.test_markdown_code_spans",
-            "totalTests": 37,
+            "totalTests": 38,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -335,7 +359,7 @@
             "totalTests": 1,
             "failedTests": 0,
             "errorTests": 0,
-            "skippedTests": 1,
+            "skippedTests": 0,
             "elapsedTimeInMilliseconds": 0
         },
         {
@@ -524,7 +548,7 @@
         },
         {
             "name": "test.gfm.test_markdown_list_blocks",
-            "totalTests": 133,
+            "totalTests": 137,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 4,
@@ -532,7 +556,7 @@
         },
         {
             "name": "test.gfm.test_markdown_lists",
-            "totalTests": 68,
+            "totalTests": 70,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -543,7 +567,7 @@
             "totalTests": 16,
             "failedTests": 0,
             "errorTests": 0,
-            "skippedTests": 2,
+            "skippedTests": 0,
             "elapsedTimeInMilliseconds": 0
         },
         {
@@ -564,7 +588,7 @@
         },
         {
             "name": "test.gfm.test_markdown_reference_links",
-            "totalTests": 97,
+            "totalTests": 104,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -596,7 +620,7 @@
         },
         {
             "name": "test.gfm.test_markdown_strikethrough_extension",
-            "totalTests": 2,
+            "totalTests": 7,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -612,15 +636,15 @@
         },
         {
             "name": "test.gfm.test_markdown_tabs",
-            "totalTests": 30,
+            "totalTests": 34,
             "failedTests": 0,
             "errorTests": 0,
-            "skippedTests": 7,
+            "skippedTests": 0,
             "elapsedTimeInMilliseconds": 0
         },
         {
             "name": "test.gfm.test_markdown_task_list_items",
-            "totalTests": 2,
+            "totalTests": 10,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -684,10 +708,10 @@
         },
         {
             "name": "test.gfm.test_markdown_whitespace_fenced",
-            "totalTests": 99,
+            "totalTests": 103,
             "failedTests": 0,
             "errorTests": 0,
-            "skippedTests": 25,
+            "skippedTests": 0,
             "elapsedTimeInMilliseconds": 0
         },
         {
@@ -700,10 +724,10 @@
         },
         {
             "name": "test.gfm.test_markdown_whitespace_html",
-            "totalTests": 46,
+            "totalTests": 73,
             "failedTests": 0,
             "errorTests": 0,
-            "skippedTests": 8,
+            "skippedTests": 0,
             "elapsedTimeInMilliseconds": 0
         },
         {
@@ -711,7 +735,7 @@
             "totalTests": 63,
             "failedTests": 0,
             "errorTests": 0,
-            "skippedTests": 10,
+            "skippedTests": 0,
             "elapsedTimeInMilliseconds": 0
         },
         {
@@ -732,7 +756,7 @@
         },
         {
             "name": "test.gfm.test_markdown_whitespace_paragraph",
-            "totalTests": 56,
+            "totalTests": 58,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -756,15 +780,15 @@
         },
         {
             "name": "test.gfm.test_markdown_whitespaces",
-            "totalTests": 41,
+            "totalTests": 42,
             "failedTests": 0,
             "errorTests": 0,
-            "skippedTests": 8,
+            "skippedTests": 0,
             "elapsedTimeInMilliseconds": 0
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_block_block_block",
-            "totalTests": 78,
+            "totalTests": 91,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -772,7 +796,7 @@
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_block_block_ordered_max",
-            "totalTests": 150,
+            "totalTests": 152,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -780,7 +804,7 @@
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_block_block_ordered_nomax",
-            "totalTests": 140,
+            "totalTests": 141,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -788,7 +812,7 @@
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_block_block_unordered",
-            "totalTests": 65,
+            "totalTests": 86,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -820,7 +844,7 @@
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_block_unordered_block",
-            "totalTests": 60,
+            "totalTests": 103,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -836,7 +860,7 @@
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_block_unordered_unordered",
-            "totalTests": 41,
+            "totalTests": 74,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -844,7 +868,7 @@
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_ordered_block_block",
-            "totalTests": 48,
+            "totalTests": 67,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -860,7 +884,7 @@
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_ordered_block_unordered",
-            "totalTests": 32,
+            "totalTests": 45,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -924,7 +948,7 @@
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_unordered_block_ordered",
-            "totalTests": 32,
+            "totalTests": 56,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -964,7 +988,7 @@
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_unordered_unordered_block",
-            "totalTests": 28,
+            "totalTests": 31,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -980,7 +1004,7 @@
         },
         {
             "name": "test.nested_three.test_markdown_nested_three_unordered_unordered_unordered",
-            "totalTests": 22,
+            "totalTests": 30,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1108,7 +1132,7 @@
         },
         {
             "name": "test.rules.test_md002",
-            "totalTests": 11,
+            "totalTests": 12,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1116,7 +1140,7 @@
         },
         {
             "name": "test.rules.test_md003",
-            "totalTests": 41,
+            "totalTests": 42,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1124,7 +1148,7 @@
         },
         {
             "name": "test.rules.test_md004",
-            "totalTests": 19,
+            "totalTests": 36,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1132,7 +1156,7 @@
         },
         {
             "name": "test.rules.test_md005",
-            "totalTests": 29,
+            "totalTests": 93,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1140,7 +1164,7 @@
         },
         {
             "name": "test.rules.test_md006",
-            "totalTests": 16,
+            "totalTests": 25,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1148,7 +1172,7 @@
         },
         {
             "name": "test.rules.test_md007",
-            "totalTests": 33,
+            "totalTests": 83,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1156,23 +1180,7 @@
         },
         {
             "name": "test.rules.test_md009",
-            "totalTests": 20,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md009_config",
-            "totalTests": 4,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md009_good",
-            "totalTests": 14,
+            "totalTests": 71,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1180,31 +1188,7 @@
         },
         {
             "name": "test.rules.test_md010",
-            "totalTests": 9,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md010_block_quote",
-            "totalTests": 4,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md010_ordered_list",
-            "totalTests": 10,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md010_unordered_list",
-            "totalTests": 10,
+            "totalTests": 54,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1212,286 +1196,6 @@
         },
         {
             "name": "test.rules.test_md011",
-            "totalTests": 5,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md012",
-            "totalTests": 11,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md013",
-            "totalTests": 43,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md014",
-            "totalTests": 5,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md018",
-            "totalTests": 28,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md019",
-            "totalTests": 5,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md020",
-            "totalTests": 35,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md021",
-            "totalTests": 8,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md022",
-            "totalTests": 49,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md023",
-            "totalTests": 16,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md024",
-            "totalTests": 24,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md025",
-            "totalTests": 16,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md026",
-            "totalTests": 11,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md027",
-            "totalTests": 68,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md027_inline",
-            "totalTests": 29,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md027_leaf",
-            "totalTests": 31,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md027_leaf_plus_one",
-            "totalTests": 19,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md028",
-            "totalTests": 11,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md029",
-            "totalTests": 30,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md030_ordered",
-            "totalTests": 22,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md030_unordered",
-            "totalTests": 22,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md031",
-            "totalTests": 24,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md032",
-            "totalTests": 15,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md033",
-            "totalTests": 17,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md034",
-            "totalTests": 15,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md035",
-            "totalTests": 19,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md036",
-            "totalTests": 14,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md037",
-            "totalTests": 10,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md038",
-            "totalTests": 8,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md039",
-            "totalTests": 20,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md040",
-            "totalTests": 4,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md041",
-            "totalTests": 20,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md042",
-            "totalTests": 8,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md043",
-            "totalTests": 30,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md044",
-            "totalTests": 38,
-            "failedTests": 0,
-            "errorTests": 0,
-            "skippedTests": 0,
-            "elapsedTimeInMilliseconds": 0
-        },
-        {
-            "name": "test.rules.test_md045",
             "totalTests": 6,
             "failedTests": 0,
             "errorTests": 0,
@@ -1499,15 +1203,255 @@
             "elapsedTimeInMilliseconds": 0
         },
         {
-            "name": "test.rules.test_md046",
-            "totalTests": 11,
+            "name": "test.rules.test_md012",
+            "totalTests": 96,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
             "elapsedTimeInMilliseconds": 0
         },
         {
-            "name": "test.rules.test_md047",
+            "name": "test.rules.test_md013",
+            "totalTests": 44,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md014",
+            "totalTests": 6,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md018",
+            "totalTests": 30,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md019",
+            "totalTests": 48,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md020",
+            "totalTests": 40,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md021",
+            "totalTests": 54,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md022",
+            "totalTests": 59,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md023",
+            "totalTests": 107,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md024",
+            "totalTests": 25,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md025",
+            "totalTests": 17,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md026",
+            "totalTests": 12,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md027",
+            "totalTests": 128,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md027_inline",
+            "totalTests": 47,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md027_leaf",
+            "totalTests": 49,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md027_leaf_plus_one",
+            "totalTests": 38,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md028",
+            "totalTests": 12,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md029",
+            "totalTests": 71,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md030_ordered",
+            "totalTests": 35,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md030_unordered",
+            "totalTests": 46,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md031",
+            "totalTests": 655,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 24,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md032",
+            "totalTests": 16,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md033",
+            "totalTests": 19,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md034",
+            "totalTests": 16,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md035",
+            "totalTests": 30,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md036",
+            "totalTests": 15,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md037",
+            "totalTests": 59,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md038",
+            "totalTests": 13,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md039",
+            "totalTests": 59,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md040",
+            "totalTests": 5,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md041",
+            "totalTests": 21,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md042",
             "totalTests": 9,
             "failedTests": 0,
             "errorTests": 0,
@@ -1515,8 +1459,48 @@
             "elapsedTimeInMilliseconds": 0
         },
         {
+            "name": "test.rules.test_md043",
+            "totalTests": 33,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md044",
+            "totalTests": 100,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md045",
+            "totalTests": 8,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md046",
+            "totalTests": 36,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_md047",
+            "totalTests": 14,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
             "name": "test.rules.test_md048",
-            "totalTests": 11,
+            "totalTests": 17,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1524,7 +1508,23 @@
         },
         {
             "name": "test.rules.test_plugin_manager",
-            "totalTests": 53,
+            "totalTests": 58,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 4,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_pml100",
+            "totalTests": 60,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.rules.test_pml101",
+            "totalTests": 51,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1533,6 +1533,14 @@
         {
             "name": "test.test_application_file_scanner",
             "totalTests": 7,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.test_exception_handling",
+            "totalTests": 9,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1556,7 +1564,7 @@
         },
         {
             "name": "test.test_main_alternate_extensions",
-            "totalTests": 8,
+            "totalTests": 10,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1564,7 +1572,7 @@
         },
         {
             "name": "test.test_main_config",
-            "totalTests": 14,
+            "totalTests": 15,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1588,7 +1596,7 @@
         },
         {
             "name": "test.test_main_logger",
-            "totalTests": 15,
+            "totalTests": 18,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1612,10 +1620,10 @@
         },
         {
             "name": "test.test_markdown_extra",
-            "totalTests": 105,
+            "totalTests": 321,
             "failedTests": 0,
             "errorTests": 0,
-            "skippedTests": 7,
+            "skippedTests": 11,
             "elapsedTimeInMilliseconds": 0
         },
         {
@@ -1643,8 +1651,64 @@
             "elapsedTimeInMilliseconds": 0
         },
         {
+            "name": "test.tokens.test_block_quote_markdown_token",
+            "totalTests": 1,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.tokens.test_end_token",
+            "totalTests": 1,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.tokens.test_fenced_code_block_markdown_token",
+            "totalTests": 1,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.tokens.test_inline_code_span_markdown_token",
+            "totalTests": 1,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.tokens.test_list_start_markdown_token",
+            "totalTests": 1,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
             "name": "test.tokens.test_markdown_token",
-            "totalTests": 3,
+            "totalTests": 5,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.tokens.test_new_list_item_markdown_token",
+            "totalTests": 1,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.tokens.test_paragraph_markdown_token",
+            "totalTests": 1,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,
@@ -1653,6 +1717,38 @@
         {
             "name": "test.tokens.test_plugin_scan_context",
             "totalTests": 3,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.tokens.test_raw_html_markdown_token",
+            "totalTests": 1,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.tokens.test_reference_markdown_token",
+            "totalTests": 1,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.tokens.test_text_markdown_token",
+            "totalTests": 1,
+            "failedTests": 0,
+            "errorTests": 0,
+            "skippedTests": 0,
+            "elapsedTimeInMilliseconds": 0
+        },
+        {
+            "name": "test.tokens.test_thematic_break_markdown_token",
+            "totalTests": 1,
             "failedTests": 0,
             "errorTests": 0,
             "skippedTests": 0,

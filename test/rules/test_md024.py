@@ -1,9 +1,11 @@
 """
 Module to provide tests related to the MD024 rule.
 """
+
 import os
 from test.markdown_scanner import MarkdownScanner
-from test.utils import write_temporary_configuration
+from test.rules.utils import execute_query_configuration_test, pluginQueryConfigTest
+from test.utils import create_temporary_configuration_file
 
 import pytest
 
@@ -371,9 +373,9 @@ def test_md024_good_different_heading_content_atx_with_configuration():
         "test", "resources", "rules", "md024", "different_heading_content_atx.md"
     )
     supplied_configuration = {"plugins": {"md024": {"siblings_only": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -392,9 +394,6 @@ def test_md024_good_different_heading_content_atx_with_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -410,9 +409,9 @@ def test_md024_good_same_heading_content_atx_with_configuration():
         "test", "resources", "rules", "md024", "same_heading_content_atx.md"
     )
     supplied_configuration = {"plugins": {"md024": {"siblings_only": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -431,9 +430,6 @@ def test_md024_good_same_heading_content_atx_with_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -449,9 +445,9 @@ def test_md024_bad_same_heading_in_siblings_atx_with_configuration():
         "test", "resources", "rules", "md024", "same_heading_in_siblings_atx.md"
     )
     supplied_configuration = {"plugins": {"md024": {"siblings_only": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -473,9 +469,6 @@ def test_md024_bad_same_heading_in_siblings_atx_with_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -491,9 +484,9 @@ def test_md024_good_same_heading_but_not_in_siblings_atx_with_configuration():
         "test", "resources", "rules", "md024", "same_heading_but_not_in_siblings_atx.md"
     )
     supplied_configuration = {"plugins": {"md024": {"siblings_only": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -512,9 +505,6 @@ def test_md024_good_same_heading_but_not_in_siblings_atx_with_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -530,9 +520,9 @@ def test_md024_good_same_heading_but_not_in_siblings_atx_with_alternate_configur
         "test", "resources", "rules", "md024", "same_heading_but_not_in_siblings_atx.md"
     )
     supplied_configuration = {"plugins": {"md024": {"allow_different_nesting": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -551,9 +541,6 @@ def test_md024_good_same_heading_but_not_in_siblings_atx_with_alternate_configur
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -738,9 +725,9 @@ def test_md024_good_different_heading_content_setext_with_configuration():
         "test", "resources", "rules", "md024", "different_heading_content_setext.md"
     )
     supplied_configuration = {"plugins": {"md024": {"siblings_only": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -759,9 +746,6 @@ def test_md024_good_different_heading_content_setext_with_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -777,9 +761,9 @@ def test_md024_good_same_heading_content_setext_with_configuration():
         "test", "resources", "rules", "md024", "same_heading_content_setext.md"
     )
     supplied_configuration = {"plugins": {"md024": {"siblings_only": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "-c",
             configuration_file,
@@ -798,9 +782,6 @@ def test_md024_good_same_heading_content_setext_with_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -816,9 +797,9 @@ def test_md024_bad_same_heading_in_siblings_setext_with_configuration():
         "test", "resources", "rules", "md024", "same_heading_in_siblings_setext.md"
     )
     supplied_configuration = {"plugins": {"md024": {"siblings_only": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--disable-rules",
             "md025",
@@ -842,9 +823,6 @@ def test_md024_bad_same_heading_in_siblings_setext_with_configuration():
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
 
 
 @pytest.mark.rules
@@ -864,9 +842,9 @@ def test_md024_good_same_heading_but_not_in_siblings_setext_with_configuration()
         "same_heading_but_not_in_siblings_setext.md",
     )
     supplied_configuration = {"plugins": {"md024": {"siblings_only": True}}}
-    configuration_file = None
-    try:
-        configuration_file = write_temporary_configuration(supplied_configuration)
+    with create_temporary_configuration_file(
+        supplied_configuration
+    ) as configuration_file:
         supplied_arguments = [
             "--disable-rules",
             "md025",
@@ -887,6 +865,26 @@ def test_md024_good_same_heading_but_not_in_siblings_setext_with_configuration()
         execute_results.assert_results(
             expected_output, expected_error, expected_return_code
         )
-    finally:
-        if configuration_file and os.path.exists(configuration_file):
-            os.remove(configuration_file)
+
+
+def test_md024_query_config():
+    config_test = pluginQueryConfigTest(
+        "md024",
+        """
+  ITEM               DESCRIPTION
+
+  Id                 md024
+  Name(s)            no-duplicate-heading,no-duplicate-header
+  Short Description  Multiple headings cannot contain the same content.
+  Description Url    https://pymarkdown.readthedocs.io/en/latest/plugins/rule_
+                     md024.md
+
+
+  CONFIGURATION ITEM       TYPE     VALUE
+
+  siblings_only            boolean  False
+  allow_different_nesting  boolean  False
+
+""",
+    )
+    execute_query_configuration_test(config_test)

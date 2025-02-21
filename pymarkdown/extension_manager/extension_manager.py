@@ -1,6 +1,7 @@
 """
 Module to provide classes to deal with extensions.
 """
+
 import argparse
 import logging
 import re
@@ -29,6 +30,7 @@ from pymarkdown.return_code_helper import ApplicationResult
 LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-instance-attributes
 class ExtensionManager:
     """
     Manager object to take care of loading and accessing extension modules.
@@ -53,6 +55,10 @@ class ExtensionManager:
         self.__properties: Optional[ApplicationProperties] = None
         self.__is_front_matter_enabled: bool = False
         self.__is_linter_pragmas_enabled: bool = False
+        self.__is_disallow_raw_html_enabled: bool = False
+        self.__is_task_list_items_enabled: bool = False
+        self.__is_strike_through_enabled: bool = False
+        self.__is_extended_autolinks_enabled: bool = False
 
     def initialize(
         self,
@@ -83,11 +89,11 @@ class ExtensionManager:
             assert (
                 next_extension.extension_interface_version
                 == ExtensionManagerConstants.EXTENSION_INTERFACE_VERSION_BASIC
-            )
+            ), "Only the basic extension version is supported."
             self.__extension_details[next_extension.extension_id] = next_extension
-            self.__extension_objects[
-                next_extension.extension_id
-            ] = next_extension_object
+            self.__extension_objects[next_extension.extension_id] = (
+                next_extension_object
+            )
             _ = next_extension.extension_interface_version
             _ = next_extension.extension_configuration
 
@@ -109,13 +115,34 @@ class ExtensionManager:
 
                 next_extension_object = self.__extension_objects[next_extension_id]
                 next_extension_object.apply_configuration(extension_specific_facade)
-
         self.__is_front_matter_enabled = (
             FrontMatterExtension().get_identifier() in self.__enabled_extensions
         )
         self.__is_linter_pragmas_enabled = (
             PragmaExtension().get_identifier() in self.__enabled_extensions
         )
+        self.__is_disallow_raw_html_enabled = (
+            MarkdownDisallowRawHtmlExtension().get_identifier()
+            in self.__enabled_extensions
+        )
+        self.__is_task_list_items_enabled = (
+            MarkdownTaskListItemsExtension().get_identifier()
+            in self.__enabled_extensions
+        )
+        self.__is_strike_through_enabled = (
+            MarkdownStrikeThroughExtension().get_identifier()
+            in self.__enabled_extensions
+        )
+        self.__is_extended_autolinks_enabled = (
+            MarkdownExtendedAutolinksExtension().get_identifier()
+            in self.__enabled_extensions
+        )
+
+    def get_extension_instance(self, extension_id: str) -> ParserExtension:
+        """
+        Get instances of the extension objects.
+        """
+        return self.__extension_objects[extension_id]
 
     @property
     def is_front_matter_enabled(self) -> bool:
@@ -130,6 +157,34 @@ class ExtensionManager:
         Check to see if linter-pragmas support is enabled.
         """
         return self.__is_linter_pragmas_enabled
+
+    @property
+    def is_disallow_raw_html_enabled(self) -> bool:
+        """
+        Check to see if disallow_raw_html support is enabled.
+        """
+        return self.__is_disallow_raw_html_enabled
+
+    @property
+    def is_task_list_items_enabled(self) -> bool:
+        """
+        Check to see if task list items support is enabled.
+        """
+        return self.__is_task_list_items_enabled
+
+    @property
+    def is_strike_through_enabled(self) -> bool:
+        """
+        Check to see if strike through support is enabled.
+        """
+        return self.__is_strike_through_enabled
+
+    @property
+    def is_extended_autolinks_enabled(self) -> bool:
+        """
+        Check to see if extended autolinks support is enabled.
+        """
+        return self.__is_extended_autolinks_enabled
 
     @staticmethod
     def argparse_subparser_name() -> str:
@@ -147,7 +202,9 @@ class ExtensionManager:
             return self.__handle_argparse_subparser_list(args)
         if subparser_value == "info":
             return self.__handle_argparse_subparser_info(args)
-        assert ExtensionManager.__argparse_subparser
+        assert (
+            ExtensionManager.__argparse_subparser is not None
+        ), "Subparser must be defined by this point."
         ExtensionManager.__argparse_subparser.print_help()
         return ApplicationResult.COMMAND_LINE_ERROR
 
@@ -302,7 +359,9 @@ class ExtensionManager:
             extension_object.extension_id,
         )
 
-        assert self.__properties
+        assert (
+            self.__properties is not None
+        ), "Properties must be defined by this point."
         plugin_section_title = (
             f"{ExtensionManager.__extensions_prefix}{self.__properties.separator}"
             + f"{extension_object.extension_id}{self.__properties.separator}"
@@ -329,3 +388,6 @@ class ExtensionManager:
             if new_value is None
             else new_value
         ), extension_specific_facade
+
+
+# pylint: enable=too-many-instance-attributes

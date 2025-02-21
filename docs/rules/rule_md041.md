@@ -6,6 +6,10 @@
 | `first-line-heading` |
 | `first-line-h1` |
 
+| Autofix Available |
+| --- |
+| No |
+
 ## Summary
 
 First line in file should be a top-level heading.
@@ -56,7 +60,7 @@ top-level document heading:
 #### Front Matter
 
 If a Front Matter element is present in the document and the
-[Front Matter Extension](#ex)
+[Front Matter Extension](../extensions/front-matter.md)
 is enabled, then rule will look in the map for the Front Matter
 Extension for an entry with the exact name as specified under the
 `front_matter_title` configuration value.  For example, using the
@@ -99,7 +103,11 @@ document will not trigger this rule:
 | -- | -- | -- | -- |
 | `enabled` | `boolean` | `True` | Whether the plugin rule is enabled. |
 | `level` | `integer` | `1` | Level that is expected from the first heading (Atx or SetExt) in the document. |
-| `front_matter_title` | `string` | `title` | Name of the front-matter field that has the title associated with the document. |
+| `front_matter_title` | `string` | `title` | Name of the front-matter field that has the title associated with the document.** |
+
+** Any leading or trailing space characters are removed from the `front_matter_title`
+during processing.  This value is expected not to have the `:` at the end. Therefore,
+a header value of `subject:` would be entered as `subject`.
 
 ## Origination of Rule
 
@@ -115,3 +123,9 @@ triggering based on any information that occurred after that
 tag.  This rule is implemented to include any special tags,
 including the HTML comment tag, in the triggering conditions for
 this rule.
+
+## Fix Description
+
+The reason for not being able to auto-fix this rule is context.  Given that a top
+level was not present in the document, context from the author is needed to determine
+what text should be in that heading.

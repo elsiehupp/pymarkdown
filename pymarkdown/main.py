@@ -1,6 +1,7 @@
 """
 Module to provide for a simple implementation of a title case algorithm.
 """
+
 import argparse
 import logging
 import os
@@ -76,7 +77,9 @@ class PyMarkdownLint:
     @staticmethod
     def __get_semantic_version() -> str:
         file_path = __file__
-        assert os.path.isabs(file_path)
+        assert os.path.isabs(
+            file_path
+        ), "This should hold on all operating systems.  This is to be sure of that assumption."
         file_path = file_path.replace(os.sep, "/")
         last_index = file_path.rindex("/")
         file_path = f"{file_path[: last_index + 1]}version.py"
@@ -137,13 +140,6 @@ class PyMarkdownLint:
             help=argparse.SUPPRESS,
         )
         parser.add_argument(
-            "-x-fix",
-            dest="x_fix",
-            action="store_true",
-            default="",
-            help=argparse.SUPPRESS,
-        )
-        parser.add_argument(
             "-x-fix-debug",
             dest="x_fix_debug",
             action="store_true",
@@ -153,6 +149,13 @@ class PyMarkdownLint:
         parser.add_argument(
             "-x-fix-file-debug",
             dest="x_fix_file_debug",
+            action="store_true",
+            default="",
+            help=argparse.SUPPRESS,
+        )
+        parser.add_argument(
+            "-x-fix-no-rescan-log",
+            dest="x_fix_no_rescan_log",
             action="store_true",
             default="",
             help=argparse.SUPPRESS,
@@ -173,13 +176,21 @@ class PyMarkdownLint:
             default=False,
             help="if an error occurs, print out the stack trace for debug purposes",
         )
+        parser.add_argument(
+            "--continue-on-error",
+            dest="continue_on_error",
+            action="store_true",
+            default=False,
+            help="if a tokenization or plugin error occurs, allow processing to continue",
+        )
         ApplicationLogging.add_default_command_line_arguments(parser)
         ReturnCodeHelper.add_command_line_arguments(parser)
 
         subparsers = parser.add_subparsers(dest="primary_subparser")
-        PluginManager.add_argparse_subparser(subparsers)
         ExtensionManager.add_argparse_subparser(subparsers)
-        FileScanHelper.add_argparse_subparser(subparsers)
+        FileScanHelper.add_argparse_subparser(subparsers, True)
+        PluginManager.add_argparse_subparser(subparsers)
+        FileScanHelper.add_argparse_subparser(subparsers, False)
 
         subparsers.add_parser("version", help="version of the application")
 
@@ -307,6 +318,7 @@ class PyMarkdownLint:
         formatted_error: str,
         thrown_error: Optional[Exception],
         exit_on_error: bool = True,
+        print_prefix: str = "\n\n",
     ) -> None:
         LOGGER.warning(formatted_error, exc_info=thrown_error)
 
@@ -317,7 +329,9 @@ class PyMarkdownLint:
             and not isinstance(thrown_error, ValueError)
             else ""
         )
-        self.__presentation.print_system_error(f"\n\n{formatted_error}{stack_trace}")
+        self.__presentation.print_system_error(
+            f"{print_prefix}{formatted_error}{stack_trace}"
+        )
         if exit_on_error:
             ReturnCodeHelper.exit_application(ApplicationResult.SYSTEM_ERROR)
 
@@ -344,7 +358,9 @@ class PyMarkdownLint:
             self.__initialize_parser()
 
             POGGER.info("Processing files with parser.")
-            assert self.__tokenizer
+            assert (
+                self.__tokenizer is not None
+            ), "When scanning, the tokenizer should have already been initialized."
             fsh = FileScanHelper(
                 self.__tokenizer,
                 self.__plugins,
@@ -352,10 +368,12 @@ class PyMarkdownLint:
                 self.__show_stack_trace,
                 self.__handle_error,
             )
-            did_fix_any_files = fsh.process_files_to_scan(
+            did_fix_any_files, did_fail_any_file = fsh.process_files_to_scan(
                 args, use_standard_in, files_to_scan, self.__string_to_scan
             )
-            if did_fix_any_files:
+            if did_fail_any_file:
+                scan_result = ApplicationResult.SYSTEM_ERROR
+            elif did_fix_any_files:
                 scan_result = ApplicationResult.FIXED_AT_LEAST_ONE_FILE
             elif self.__plugins.number_of_scan_failures:
                 scan_result = ApplicationResult.SCAN_TRIGGERED_AT_LEAST_ONCE

@@ -1,8 +1,21 @@
 """
 Module to provide tests related to the "-l" option.
 """
+
 import os
+import sys
 from test.markdown_scanner import MarkdownScanner
+
+if sys.version_info < (3, 10):
+    ARGPARSE_X = "optional arguments:"
+else:
+    ARGPARSE_X = "options:"
+if sys.version_info < (3, 13):
+    ALT_EXTENSIONS_X = (
+        "-ae ALTERNATE_EXTENSIONS, --alternate-extensions ALTERNATE_EXTENSIONS"
+    )
+else:
+    ALT_EXTENSIONS_X = "-ae, --alternate-extensions ALTERNATE_EXTENSIONS"
 
 
 def test_markdown_with_dash_h():
@@ -18,16 +31,23 @@ def test_markdown_with_dash_h():
     expected_output = """usage: main.py scan [-h] [-l] [-r] [-ae ALTERNATE_EXTENSIONS] path [path ...]
 
 positional arguments:
-  path                  one or more paths to scan for eligible Markdown files
+  path                  one or more paths to examine for eligible Markdown
+                        files
 
-optional arguments:
+{ARGPARSE_X}
   -h, --help            show this help message and exit
-  -l, --list-files      list the eligible Markdown files and exit
-  -r, --recurse         recursively scan directories for files
-  -ae ALTERNATE_EXTENSIONS, --alternate-extensions ALTERNATE_EXTENSIONS
-                        provide an alternate set of file extensions to scan
-                        for
-"""
+  -l, --list-files      list any eligible Markdown files found on the
+                        specified paths and exit
+  -r, --recurse         recursively traverse any found directories for
+                        matching files
+  {ALT_EXTENSIONS_X}
+                        provide an alternate set of file extensions to match
+                        against
+""".replace(
+        "{ARGPARSE_X}", ARGPARSE_X
+    ).replace(
+        "{ALT_EXTENSIONS_X}", ALT_EXTENSIONS_X
+    )
     expected_error = ""
 
     # Act
@@ -363,6 +383,7 @@ def test_markdown_with_dash_l_on_directory():
 {source_path}developer.md
 {source_path}extensions.md
 {source_path}faq.md
+{source_path}old_README.md
 {source_path}pre-commit.md
 {source_path}rules.md
 {source_path}writing_rule_plugins.md""".replace(
@@ -404,9 +425,14 @@ def test_markdown_with_dash_l_and_dash_r_on_directory():
 {source_path}api.md
 {source_path}developer.md
 {source_path}extensions.md
+{extensions_source_path}disallowed-raw_html.md
+{extensions_source_path}extended_autolinks.md
 {extensions_source_path}front-matter.md
 {extensions_source_path}pragmas.md
+{extensions_source_path}strikethrough.md
+{extensions_source_path}task-list-items.md
 {source_path}faq.md
+{source_path}old_README.md
 {source_path}pre-commit.md
 {source_path}rules.md
 {rules_source_path}rule_md001.md
@@ -453,6 +479,8 @@ def test_markdown_with_dash_l_and_dash_r_on_directory():
 {rules_source_path}rule_md046.md
 {rules_source_path}rule_md047.md
 {rules_source_path}rule_md048.md
+{rules_source_path}rule_pml100.md
+{rules_source_path}rule_pml101.md
 {source_path}writing_rule_plugins.md""".replace(
             "{source_path}", source_path
         )

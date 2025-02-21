@@ -5,6 +5,10 @@
 | `md007` |
 | `ul-indent` |
 
+| Autofix Available |
+| --- |
+| Yes |
+
 ## Summary
 
 Unordered list indentation.
@@ -50,22 +54,44 @@ characters:
   * but sublist is not
 ```
 
-If required, the amount of indentation at each level can be set using
-the `indent` configuration value.  This may be needed for certain parsers
-that require four space characters for indentation instead of the normal
-two characters.  For those parsers, the following example specifies a
-valid list with a sublist:
+If required, the amount of indentation at each level can be set using the `indent`
+configuration value.  Note that an `indent` value of `3` will make the following
+example correct:
 
 ```Markdown
 * indented properly
-    * but sublist is not
+   * but sublist is not
 ```
 
-In addition, to start the first level of lists with the specified amount
-of indentation, the `start_indented` configuration value can be set to
-`True`.
+but it will also not trigger in the case of a list like this one:
+
+```Markdown
+* indented properly
+  1. indented properly
+     * indented properly
+```
+
+The reason for this is that the ordered list breaks up the "chain" of unordered
+lists into two distinct unordered lists, as this rule does not apply to ordered
+list indentations.  If indentation support is also required for ordered lists,
+refer to the selection below on [Python-Markdown Support](#python-markdown-support).
+
+In addition, there are occasion where parsers expect to start the first level of
+lists with the specified amount of indentation.  For those situations, the `start_indented`
+configuration value can be set to `True` to accomodate these parsers.
 
 ### Notes
+
+#### Python-Markdown Support
+
+If you are using [Python-Markdown](https://python-markdown.github.io/) or tools
+that use it such as the popular [MkDocs](https://www.mkdocs.org/), this rule
+should be disabled in favor of enabling the [Pml101 rule](rule_pml101.md).  That
+rule supports anchored list indentation which is our name for the indentation
+method used by Python-Markdown.  More information on the proper configuration of
+that rule for is presented in that rule's documentation.
+
+#### Unordered Lists Only
 
 The indentation measured by this rule solely covers the indentation for any
 unordered list items.  Therefore, if the following Markdown is scanned under
@@ -115,3 +141,37 @@ on the following sample:
     + sublist
        + sublist
 ```
+
+## Fix Description
+
+Any unordered list item elements and their new list item elements are examined
+to make sure that they start with a multiple of the specified `indent`.  If an
+unordered list is started within a block quote or ordered list item, the base indent
+within that element is calculated.  If not in either of those two elements, the
+base indent is `0`.  The number of containing unordered list item elements or list
+depth is calculated.
+
+A simple calculation is made to determine the ideal ident: the base indent plus
+the `indent` value multiplied by the list depth minus `1`.  If that value
+differs from the actual indent, the list item start element or the new list item
+element is adjusted to start at that calculated location.
+
+Therefore, for the above example:
+
+```Markdown
+1. ordered indent
+    * unordered indent
+```
+
+the base indent is `3` and the list depth is `1`. Therefore `3 + (1-1)*2` equals
+`3`, adjusting the unordered list start to have an indent of 3:
+
+```Markdown
+1. ordered indent
+   * unordered indent
+```
+
+The same calculation happens for a new list item for that list, arriving at the same
+list depth, and therefore the same calculated indent.  For any nested lists, the
+list depth is increased accordingly, resulting in indents of `5`, `7`, `9`, and
+so on.

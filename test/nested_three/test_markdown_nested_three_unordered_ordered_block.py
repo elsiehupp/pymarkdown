@@ -1,6 +1,7 @@
 """
 Extra tests for three level nesting with un/or.
 """
+
 from test.utils import act_and_assert
 
 import pytest
@@ -817,7 +818,7 @@ def test_nested_three_unordered_max_ordered_max_block_max_empty_no_bq1():
                 item"""
     expected_tokens = [
         "[ulist(1,4):+::8:   ]",
-        "[olist(1,9):.:1:14:        :              \n]",
+        "[olist(1,9):.:1:14:        :              ]",
         "[block-quote(1,15):              :              >]",
         "[BLANK(1,16):]",
         "[end-block-quote:::False]",

@@ -1,6 +1,7 @@
 """
 https://github.github.com/gfm/#html-blocks
 """
+
 from test.utils import act_and_assert
 
 import pytest
@@ -1924,10 +1925,7 @@ def test_html_blocks_extra_02a():
         "[end-html-block:::True]",
         "[li(2,1):2::]",
         "[para(2,3):\n\n]",
-        "[text(2,3):[:]",
-        "[text(2,4):foo:]",
-        "[text(2,7):]:]",
-        "[text(2,8)::\n/url\n::\n\n]",
+        "[text(2,3):[foo]:\n/url\n::\n\n]",
         "[raw-html(4,1):/script]",
         "[end-para:::True]",
         "[BLANK(5,1):]",
@@ -1970,10 +1968,7 @@ def test_html_blocks_extra_02b():
         "[end-html-block:::True]",
         "[li(2,1):2::]",
         "[para(2,3):\n \n ]",
-        "[text(2,3):[:]",
-        "[text(2,4):foo:]",
-        "[text(2,7):]:]",
-        "[text(2,8)::\n/url\nscript::\n\n]",
+        "[text(2,3):[foo]:\n/url\nscript::\n\n]",
         "[end-para:::True]",
         "[BLANK(5,1):]",
         "[end-ulist:::True]",
@@ -2015,10 +2010,7 @@ script
         "[end-html-block:::True]",
         "[li(2,1):2::]",
         "[para(2,3):\n\n]",
-        "[text(2,3):[:]",
-        "[text(2,4):foo:]",
-        "[text(2,7):]:]",
-        "[text(2,8)::\n/url\nscript::\n\n]",
+        "[text(2,3):[foo]:\n/url\nscript::\n\n]",
         "[end-para:::True]",
         "[BLANK(5,1):]",
         "[end-ulist:::True]",
@@ -2404,7 +2396,7 @@ def:
 </ul>"""
 
     # Act & Assert
-    act_and_assert(source_markdown, expected_gfm, expected_tokens, show_debug=False)
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
 @pytest.mark.gfm
@@ -2516,7 +2508,7 @@ def:
 </ul>"""
 
     # Act & Assert
-    act_and_assert(source_markdown, expected_gfm, expected_tokens, show_debug=False)
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
 @pytest.mark.gfm
@@ -2586,7 +2578,7 @@ def:
 </ul>"""
 
     # Act & Assert
-    act_and_assert(source_markdown, expected_gfm, expected_tokens, show_debug=False)
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)
 
 
 @pytest.mark.gfm
@@ -2656,4 +2648,4 @@ def:
 </ul>"""
 
     # Act & Assert
-    act_and_assert(source_markdown, expected_gfm, expected_tokens, show_debug=False)
+    act_and_assert(source_markdown, expected_gfm, expected_tokens)

@@ -1,9 +1,13 @@
 """
 Module to help with the parsing of text inline elements.
 """
+
 import logging
 from typing import List, Optional, Tuple, cast
 
+from pymarkdown.container_blocks.parse_block_pass_properties import (
+    ParseBlockPassProperties,
+)
 from pymarkdown.general.parser_helper import ParserHelper
 from pymarkdown.general.parser_logger import ParserLogger
 from pymarkdown.inline.emphasis_helper import EmphasisHelper
@@ -23,7 +27,7 @@ from pymarkdown.tokens.text_markdown_token import TextMarkdownToken
 POGGER = ParserLogger(logging.getLogger(__name__))
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, too-many-lines
 
 
 class InlineTextBlockHelper:
@@ -31,9 +35,32 @@ class InlineTextBlockHelper:
     Class to help with the parsing of text inline elements.
     """
 
+    @staticmethod
+    def __process_inline_text_block_prepare(
+        source_text: str,
+        whitespace_to_recombine: Optional[str],
+        is_para: bool,
+        is_setext: bool,
+        para_space: Optional[str],
+    ) -> Tuple[str, Optional[List[str]]]:
+        if whitespace_to_recombine:
+            source_text, _ = ParserHelper.recombine_string_with_whitespace(
+                source_text, whitespace_to_recombine
+            )
+
+        split_para_space: Optional[List[str]] = None
+        if is_para or is_setext:
+            assert (
+                para_space is not None
+            ), "If in a paragraph or setext text, para_space must be defined."
+            split_para_space = para_space.split(ParserHelper.newline_character)
+
+        return source_text, split_para_space
+
     # pylint: disable=too-many-arguments, too-many-locals
     @staticmethod  # noqa: C901
     def process_inline_text_block(  # noqa: C901
+        parser_properties: ParseBlockPassProperties,
         source_text: str,
         coalesced_stack: List[MarkdownToken],
         starting_whitespace: str = "",
@@ -59,20 +86,16 @@ class InlineTextBlockHelper:
             current_string,
             current_string_unresolved,
         ) = (line_number, column_number, "", "")
-        start_index: Optional[int] = 0
+        start_index = 0
         inline_blocks: List[MarkdownToken] = []
         end_string: Optional[str] = ""
-        fold_space: Optional[List[str]] = None
 
-        if whitespace_to_recombine:
-            source_text, _ = ParserHelper.recombine_string_with_whitespace(
-                source_text, whitespace_to_recombine
+        source_text, split_para_space = (
+            InlineTextBlockHelper.__process_inline_text_block_prepare(
+                source_text, whitespace_to_recombine, is_para, is_setext, para_space
             )
-        if is_para or is_setext:
-            assert para_space is not None
-            fold_space = para_space.split(ParserHelper.newline_character)
+        )
 
-        assert start_index is not None
         next_index = ParserHelper.index_any_of(
             source_text,
             InlineHandlerHelper.valid_inline_text_block_sequence_starts,
@@ -81,7 +104,6 @@ class InlineTextBlockHelper:
         newlines_encountered = 0
         while next_index != -1:
             old_next_index = next_index
-            assert start_index is not None
             (
                 line_number,
                 column_number,
@@ -89,12 +111,14 @@ class InlineTextBlockHelper:
                 current_string,
                 current_string_unresolved,
                 starting_whitespace,
-                fold_space,
+                split_para_space,
                 last_line_number,
                 last_column_number,
                 start_index,
                 next_index,
+                adj_newlines,
             ) = InlineTextBlockHelper.__handle_next_inline_character(
+                parser_properties,
                 source_text,
                 start_index,
                 next_index,
@@ -111,10 +135,13 @@ class InlineTextBlockHelper:
                 starting_whitespace,
                 last_line_number,
                 last_column_number,
-                fold_space,
+                split_para_space,
                 tabified_text,
                 newlines_encountered,
+                para_space,
             )
+            if adj_newlines:
+                newlines_encountered += adj_newlines
             if source_text[old_next_index] == "\n":
                 newlines_encountered += 1
 
@@ -137,6 +164,7 @@ class InlineTextBlockHelper:
     # pylint: disable=too-many-arguments, too-many-locals
     @staticmethod
     def __handle_next_inline_character(
+        parser_properties: ParseBlockPassProperties,
         source_text: str,
         start_index: int,
         next_index: int,
@@ -153,9 +181,10 @@ class InlineTextBlockHelper:
         starting_whitespace: str,
         last_line_number: int,
         last_column_number: int,
-        fold_space: Optional[List[str]],
+        split_para_space: Optional[List[str]],
         tabified_text: Optional[str],
         newlines_encountered: int,
+        para_space: Optional[str] = None,
     ) -> Tuple[
         int,
         int,
@@ -166,7 +195,8 @@ class InlineTextBlockHelper:
         Optional[List[str]],
         int,
         int,
-        Optional[int],
+        int,
+        int,
         int,
     ]:
         (
@@ -187,6 +217,11 @@ class InlineTextBlockHelper:
             line_number,
             column_number,
             para_owner,
+            parser_properties,
+            coalesced_stack,
+            current_string,
+            whitespace_to_recombine,
+            para_space,
         )
 
         (
@@ -199,9 +234,11 @@ class InlineTextBlockHelper:
             remaining_line,
             end_string,
             current_string,
+            current_string_unresolved,
             was_new_line,
             tabified_remaining_line,
         ) = InlineTextBlockHelper.__handle_next_special_character(
+            parser_properties,
             source_text,
             next_index,
             inline_request,
@@ -212,6 +249,7 @@ class InlineTextBlockHelper:
             remaining_line,
             end_string,
             current_string,
+            current_string_unresolved,
             inline_blocks,
             is_setext,
             whitespace_to_recombine,
@@ -254,7 +292,7 @@ class InlineTextBlockHelper:
         (
             line_number,
             column_number,
-            fold_space,
+            split_para_space,
             current_string,
             current_string_unresolved,
             last_line_number,
@@ -265,7 +303,7 @@ class InlineTextBlockHelper:
         ) = InlineTextBlockHelper.__handle_next_inline_character_finish_handling(
             line_number,
             column_number,
-            fold_space,
+            split_para_space,
             was_new_line,
             coalesced_stack,
             remaining_line,
@@ -292,16 +330,17 @@ class InlineTextBlockHelper:
             current_string,
             current_string_unresolved,
             starting_whitespace,
-            fold_space,
+            split_para_space,
             last_line_number,
             last_column_number,
             new_start_index,
             next_index,
+            inline_response.adj_newlines,
         )
 
     # pylint: enable=too-many-arguments, too-many-locals
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-locals
     @staticmethod
     def __handle_next_inline_character_setup(
         source_text: str,
@@ -314,6 +353,11 @@ class InlineTextBlockHelper:
         line_number: int,
         column_number: int,
         para_owner: Optional[ParagraphMarkdownToken],
+        parse_properties: ParseBlockPassProperties,
+        coalesced_stack: List[MarkdownToken],
+        current_string: str,
+        whitespace_to_recombine: Optional[str],
+        para_space: Optional[str] = None,
     ) -> Tuple[bool, str, int, Optional[MarkdownToken], Optional[str], InlineRequest]:
         (
             remaining_line,
@@ -336,17 +380,24 @@ class InlineTextBlockHelper:
                 )
             )
 
+        last_container_token = coalesced_stack[-1] if coalesced_stack else None
+
         inline_request = InlineRequest(
             source_text,
             next_index,
             inline_blocks,
             remaining_line,
             tabified_remaining_line,
+            current_string,
             current_string_unresolved,
             line_number,
             column_number,
             para_owner,
             tabified_text,
+            parse_properties,
+            last_container_token,
+            whitespace_to_recombine,
+            para_space,
         )
         return (
             False,
@@ -357,14 +408,14 @@ class InlineTextBlockHelper:
             inline_request,
         )
 
-    # pylint: enable=too-many-arguments
+    # pylint: enable=too-many-arguments,too-many-locals
 
     # pylint: disable=too-many-arguments
     @staticmethod
     def __complete_inline_block_processing(
         inline_blocks: List[MarkdownToken],
         source_text: str,
-        start_index: Optional[int],
+        start_index: int,
         current_string: str,
         end_string: Optional[str],
         starting_whitespace: str,
@@ -387,16 +438,19 @@ class InlineTextBlockHelper:
         POGGER.debug("__cibp>line_number>$<", line_number)
         POGGER.debug("__cibp>column_number>$<", column_number)
 
-        assert start_index is not None
         if start_index < len(source_text):
             text_to_append = source_text[start_index:]
             POGGER.debug("text_to_append>:$:<", text_to_append)
 
             POGGER.debug("tabified_text=>:$:<", tabified_text)
             if tabified_text:
-                assert tabified_text is not None
                 text_to_append = InlineTabifiedTextBlockHelper.complete_inline_block_processing_tabified(
-                    source_text, start_index, tabified_text, newlines_encountered
+                    source_text,
+                    start_index,
+                    tabified_text,
+                    newlines_encountered,
+                    inline_blocks,
+                    end_string,
                 )
                 POGGER.debug("text_to_append>:$:<", text_to_append)
 
@@ -405,7 +459,7 @@ class InlineTextBlockHelper:
             current_string = InlineHelper.append_text(current_string, text_to_append)
             POGGER.debug("current_string>:$:<", current_string)
 
-        have_processed_once = len(inline_blocks) != 0 or start_index != 0
+        have_processed_once = inline_blocks or start_index != 0
         if current_string or not have_processed_once:
             InlineTextBlockHelper.__complete_inline_block_processing_build_token(
                 current_string,
@@ -423,9 +477,82 @@ class InlineTextBlockHelper:
 
     # pylint: enable=too-many-arguments
 
+    @staticmethod
+    def __handle_next_special_character_remaining_reduce(
+        inline_request: InlineRequest, left_to_consume: int
+    ) -> None:
+        inline_block_index = len(inline_request.inline_blocks) - 1
+        stop_block_token = None
+        while (
+            stop_block_token is None
+            and inline_block_index >= 0
+            and (
+                inline_request.inline_blocks[inline_block_index].is_text
+                or inline_request.inline_blocks[inline_block_index].is_special_text
+            )
+            and left_to_consume > 0
+        ):
+            current_block_token = cast(
+                TextMarkdownToken,
+                inline_request.inline_blocks[inline_block_index],
+            )
+            token_text_len = len(current_block_token.token_text)
+            if left_to_consume <= token_text_len:
+                stop_block_token = current_block_token
+            else:
+                left_to_consume -= token_text_len
+                inline_block_index -= 1
+        assert (
+            inline_block_index >= 0 and stop_block_token is not None
+        ), "End of loop criteria."
+        if len(stop_block_token.token_text) > left_to_consume:
+            left_text = stop_block_token.token_text[:-left_to_consume]
+            new_token = TextMarkdownToken(
+                left_text,
+                stop_block_token.extracted_whitespace,
+                stop_block_token.end_whitespace,
+                tabified_text=stop_block_token.tabified_text,
+                line_number=stop_block_token.line_number,
+                column_number=stop_block_token.column_number,
+            )
+            inline_request.inline_blocks.insert(inline_block_index, new_token)
+            inline_block_index += 1
+        while len(inline_request.inline_blocks) > inline_block_index:
+            del inline_request.inline_blocks[inline_block_index]
+
+    @staticmethod
+    def __handle_next_special_character_remaining(
+        inline_request: InlineRequest,
+        inline_response: InlineResponse,
+        remaining_line: str,
+        current_string: str,
+        current_string_unresolved: str,
+    ) -> Tuple[str, str, str]:
+        left_to_consume = inline_response.reduce_remaining_line_by
+        if left_to_consume <= len(remaining_line):
+            remaining_line = remaining_line[: -inline_response.reduce_remaining_line_by]
+        else:
+            left_to_consume -= len(remaining_line)
+            remaining_line = ""
+            if left_to_consume <= len(current_string):
+                assert current_string_unresolved.endswith(
+                    current_string[-left_to_consume:]
+                ), "Unresolve string must end with part of the current string."
+                current_string = current_string[:-left_to_consume]
+                current_string_unresolved = current_string_unresolved[:-left_to_consume]
+            else:
+                left_to_consume -= len(current_string)
+                current_string = ""
+                current_string_unresolved = ""
+                InlineTextBlockHelper.__handle_next_special_character_remaining_reduce(
+                    inline_request, left_to_consume
+                )
+        return remaining_line, current_string, current_string_unresolved
+
     # pylint: disable=too-many-arguments, too-many-locals
     @staticmethod
     def __handle_next_special_character(
+        parser_properties: ParseBlockPassProperties,
         source_text: str,
         next_index: int,
         inline_request: InlineRequest,
@@ -436,6 +563,7 @@ class InlineTextBlockHelper:
         remaining_line: str,
         end_string: Optional[str],
         current_string: str,
+        current_string_unresolved: str,
         inline_blocks: List[MarkdownToken],
         is_setext: bool,
         whitespace_to_recombine: Optional[str],
@@ -452,6 +580,7 @@ class InlineTextBlockHelper:
         str,
         Optional[str],
         str,
+        str,
         bool,
         Optional[str],
     ]:
@@ -464,6 +593,7 @@ class InlineTextBlockHelper:
                 was_column_number_reset,
                 did_line_number_change,
             ) = InlineHandlerHelper.process_inline_handled_character(
+                parser_properties,
                 source_text,
                 next_index,
                 inline_request,
@@ -471,6 +601,18 @@ class InlineTextBlockHelper:
                 column_number,
                 coalesced_stack,
             )
+            if inline_response.reduce_remaining_line_by:
+                (
+                    remaining_line,
+                    current_string,
+                    current_string_unresolved,
+                ) = InlineTextBlockHelper.__handle_next_special_character_remaining(
+                    inline_request,
+                    inline_response,
+                    remaining_line,
+                    current_string,
+                    current_string_unresolved,
+                )
         else:
             was_column_number_reset, did_line_number_change = False, False
             (
@@ -508,6 +650,7 @@ class InlineTextBlockHelper:
             remaining_line,
             end_string,
             current_string,
+            current_string_unresolved,
             was_new_line,
             tabified_remaining_line,
         )
@@ -644,7 +787,7 @@ class InlineTextBlockHelper:
     def __handle_next_inline_character_finish_handling(
         line_number: int,
         column_number: int,
-        fold_space: Optional[List[str]],
+        split_para_space: Optional[List[str]],
         was_new_line: bool,
         coalesced_stack: List[MarkdownToken],
         remaining_line: str,
@@ -670,20 +813,20 @@ class InlineTextBlockHelper:
         str,
         int,
         int,
-        Optional[int],
+        int,
         int,
         Optional[str],
     ]:
         (
             line_number,
             column_number,
-            fold_space,
+            split_para_space,
         ) = InlineTextBlockHelper.__adjust_line_and_column_number(
             was_new_line,
             coalesced_stack,
             line_number,
             column_number,
-            fold_space,
+            split_para_space,
             remaining_line,
             did_line_number_change,
             was_column_number_reset,
@@ -707,6 +850,12 @@ class InlineTextBlockHelper:
             column_number,
         )
 
+        assert (
+            inline_response.new_index is not None
+        ), "new_index must be defined by now."
+        assert (
+            inline_response.new_string is not None
+        ), "new_string must be defined by now."
         (
             new_start_index,
             next_index,
@@ -727,7 +876,7 @@ class InlineTextBlockHelper:
         return (
             line_number,
             column_number,
-            fold_space,
+            split_para_space,
             current_string,
             current_string_unresolved,
             last_line_number,
@@ -746,7 +895,7 @@ class InlineTextBlockHelper:
         coalesced_stack: List[MarkdownToken],
         line_number: int,
         column_number: int,
-        fold_space: Optional[List[str]],
+        split_para_space: Optional[List[str]],
         remaining_line: str,
         did_line_number_change: bool,
         was_column_number_reset: bool,
@@ -759,7 +908,9 @@ class InlineTextBlockHelper:
                     "coalesced_list[-1]..leading_text_index=$",
                     block_quote_token.leading_text_index,
                 )
-                assert block_quote_token.bleading_spaces is not None
+                assert (
+                    block_quote_token.bleading_spaces is not None
+                ), "Bleading spaces must be defined by now."
                 split_leading_spaces = block_quote_token.bleading_spaces.split(
                     ParserHelper.newline_character
                 )
@@ -769,20 +920,24 @@ class InlineTextBlockHelper:
                 column_number += selected_split_length
 
             line_number += 1
-            assert fold_space
-            fold_space = fold_space[1:]
-            column_number += len(fold_space[0])
+            assert (
+                split_para_space
+            ), "If we had a new line, we must have paragraph/setext text to handle."
+            split_para_space = split_para_space[1:]
+            column_number += len(split_para_space[0])
         elif not was_column_number_reset:
             column_number += len(remaining_line)
         else:
-            assert did_line_number_change
+            assert did_line_number_change, "If here, the line number must have changed."
             if coalesced_stack and coalesced_stack[-1].is_block_quote_start:
                 block_quote_token = cast(BlockQuoteMarkdownToken, coalesced_stack[-1])
                 POGGER.debug(
                     "coalesced_list[-1].leading_text_index=$",
                     block_quote_token.leading_text_index,
                 )
-                assert block_quote_token.bleading_spaces is not None
+                assert (
+                    block_quote_token.bleading_spaces is not None
+                ), "Bleading spaces must be defined by now."
                 split_leading_spaces = block_quote_token.bleading_spaces.split(
                     ParserHelper.newline_character
                 )
@@ -790,7 +945,7 @@ class InlineTextBlockHelper:
                     split_leading_spaces[block_quote_token.leading_text_index]
                 )
                 column_number += selected_split_length
-        return line_number, column_number, fold_space
+        return line_number, column_number, split_para_space
 
     # pylint: enable=too-many-arguments
 
@@ -829,15 +984,15 @@ class InlineTextBlockHelper:
     # pylint: disable=too-many-arguments
     def __complete_inline_loop(
         source_text: str,
-        new_index: Optional[int],
+        new_index: int,
         end_string: Optional[str],
         whitespace_to_add: Optional[str],
         current_string: str,
         current_string_unresolved: str,
         new_string_unresolved: Optional[str],
-        new_string: Optional[str],
+        new_string: str,
         original_string: Optional[str],
-    ) -> Tuple[Optional[int], int, Optional[str], str, str]:
+    ) -> Tuple[int, int, Optional[str], str, str]:
         POGGER.debug(
             "__complete_inline_loop--current_string>>$>>",
             current_string,
@@ -867,9 +1022,11 @@ class InlineTextBlockHelper:
             "__complete_inline_loop--whitespace_to_add>>$>>",
             whitespace_to_add,
         )
-        assert new_string is not None
         if original_string is not None:
-            assert not new_string_unresolved or new_string_unresolved == original_string
+            assert (
+                new_string_unresolved is None
+                or new_string_unresolved == original_string
+            ), "new_string_unresolved must either be not defined or equal to the original_string."
             replaced_string = ParserHelper.create_replacement_markers(
                 original_string, InlineHelper.append_text("", new_string)
             )
@@ -891,7 +1048,9 @@ class InlineTextBlockHelper:
                 "split_end_string>>$>>",
                 split_end_string,
             )
-            assert len(split_end_string) >= 2
+            assert (
+                len(split_end_string) >= 2
+            ), "end_string must be split into at least 2 parts"
             new_string = split_end_string[len(split_end_string) - 2] + new_string
 
         current_string_unresolved = (
@@ -906,7 +1065,6 @@ class InlineTextBlockHelper:
         )
 
         start_index = new_index
-        assert start_index is not None
         next_index = ParserHelper.index_any_of(
             source_text,
             InlineHandlerHelper.valid_inline_text_block_sequence_starts,

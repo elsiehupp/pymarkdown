@@ -2,6 +2,7 @@
 Module to provide for a simple logger wrapper that provides extra
 functionality for logging parsing information.
 """
+
 import logging
 from typing import Any, List, cast
 
@@ -26,6 +27,10 @@ class ParserLogger:
     To keep things performant, the calls to the underlying logging libraries
     are only done when needed.
     """
+
+    start_range_sequence = "\u8268"
+    end_range_sequence = "\u8269"
+    blah_sequence = "\u00fe"
 
     __global_count = 0
 
@@ -113,13 +118,22 @@ class ParserLogger:
                     int(next_array_index / 2)
                 ]
             elif show_whitespace:
-                recipient_array[
-                    next_array_index
-                ] = ParserHelper.make_whitespace_visible(
-                    args[int(next_array_index / 2)]
+                recipient_array[next_array_index] = (
+                    ParserHelper.make_whitespace_visible(
+                        args[int(next_array_index / 2)]
+                    )
                 )
             else:
                 recipient_array[next_array_index] = ParserHelper.make_value_visible(
                     args[int(next_array_index / 2)]
                 )
-        return "".join(recipient_array)
+        formatted_string = "".join(recipient_array)
+        if ParserLogger.start_range_sequence in formatted_string:
+            formatted_string = formatted_string.replace(
+                ParserLogger.start_range_sequence, ""
+            )
+        if ParserLogger.end_range_sequence in formatted_string:
+            formatted_string = formatted_string.replace(
+                ParserLogger.end_range_sequence, ""
+            )
+        return formatted_string

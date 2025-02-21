@@ -1,6 +1,7 @@
 """
 https://github.github.com/gfm/#paragraph
 """
+
 from test.utils import act_and_assert
 
 import pytest
@@ -559,8 +560,7 @@ foo
     expected_tokens = [
         "[ulist(1,1):-::2::  ]",
         "[para(1,3):\n]",
-        "[text(1,3):abc\n::\n]",
-        "[text(2,1):*:]",
+        "[text(1,3):abc\n*::\n]",
         "[end-para:::True]",
         "[end-ulist:::True]",
         "[fcode-block(3,1):`:3::::::]",
@@ -790,8 +790,7 @@ foo
     expected_tokens = [
         "[ulist(1,1):-::2::  ]",
         "[para(1,3):\n]",
-        "[text(1,3):abc\n::\n]",
-        "[text(2,1):*:]",
+        "[text(1,3):abc\n*::\n]",
         "[end-para:::True]",
         "[end-ulist:::True]",
         "[fcode-block(3,2):`:3::::: :]",
@@ -1037,8 +1036,7 @@ foo
     expected_tokens = [
         "[ulist(1,1):-::2::  \n  ]",
         "[para(1,3):\n]",
-        "[text(1,3):abc\n::\n]",
-        "[text(2,1):*:]",
+        "[text(1,3):abc\n*::\n]",
         "[end-para:::False]",
         "[fcode-block(3,3):`:3::::::]",
         "[end-fcode-block::::True]",

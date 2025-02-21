@@ -5,6 +5,9 @@ Module to hold the request information to pass on to the handle_* functions.
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+from pymarkdown.container_blocks.parse_block_pass_properties import (
+    ParseBlockPassProperties,
+)
 from pymarkdown.tokens.markdown_token import MarkdownToken
 from pymarkdown.tokens.paragraph_markdown_token import ParagraphMarkdownToken
 
@@ -21,11 +24,16 @@ class InlineRequest:
     inline_blocks: List[MarkdownToken] = field(default_factory=list)
     remaining_line: Optional[str] = None
     tabified_remaining_line: Optional[str] = None
+    current_string: Optional[str] = None
     current_string_unresolved: Optional[str] = None
     line_number: Optional[int] = None
     column_number: Optional[int] = None
     para_owner: Optional[ParagraphMarkdownToken] = None
     tabified_text: Optional[str] = None
+    parse_properties: Optional[ParseBlockPassProperties] = None
+    last_container_token: Optional[MarkdownToken] = None
+    whitespace_to_recombine: Optional[str] = None
+    para_space: Optional[str] = None
 
 
 # pylint: enable=too-many-instance-attributes

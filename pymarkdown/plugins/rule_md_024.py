@@ -2,9 +2,14 @@
 Module to implement a plugin that looks for multiple heading lines with the same
 content.
 """
+
 from typing import Dict, List, Optional, cast
 
-from pymarkdown.plugin_manager.plugin_details import PluginDetails
+from pymarkdown.plugin_manager.plugin_details import (
+    PluginDetails,
+    PluginDetailsV3,
+    QueryConfigItem,
+)
 from pymarkdown.plugin_manager.plugin_scan_context import PluginScanContext
 from pymarkdown.plugin_manager.rule_plugin import RulePlugin
 from pymarkdown.tokens.atx_heading_markdown_token import AtxHeadingMarkdownToken
@@ -30,14 +35,13 @@ class RuleMd024(RulePlugin):
         """
         Get the details for the plugin.
         """
-        return PluginDetails(
+        return PluginDetailsV3(
             plugin_name="no-duplicate-heading,no-duplicate-header",
             plugin_id="MD024",
             plugin_enabled_by_default=True,
             plugin_description="Multiple headings cannot contain the same content.",
-            plugin_version="0.5.0",
-            plugin_interface_version=1,
-            plugin_url="https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules/rule_md024.md",
+            plugin_version="0.6.0",
+            plugin_url="https://pymarkdown.readthedocs.io/en/latest/plugins/rule_md024.md",
             plugin_configuration="siblings_only, allow_different_nesting",
         )
 
@@ -51,6 +55,15 @@ class RuleMd024(RulePlugin):
             "allow_different_nesting", default_value=False
         )
 
+    def query_config(self) -> List[QueryConfigItem]:
+        """
+        Query to find out the configuration that the rule is using.
+        """
+        return [
+            QueryConfigItem("siblings_only", self.__siblings_only),
+            QueryConfigItem("allow_different_nesting", self.__siblings_only),
+        ]
+
     def starting_new_file(self) -> None:
         """
         Event that the a new file to be scanned is starting.
@@ -59,10 +72,9 @@ class RuleMd024(RulePlugin):
         self.__start_token = None
         self.__hash_count = -1
         self.__last_hash_count = 0
-        if self.__siblings_only:
-            self.__heading_content_map = [{}, {}, {}, {}, {}, {}]
-        else:
-            self.__heading_content_map = [{}]
+        self.__heading_content_map = (
+            [{}, {}, {}, {}, {}, {}] if self.__siblings_only else [{}]
+        )
 
     def next_token(self, context: PluginScanContext, token: MarkdownToken) -> None:
         """

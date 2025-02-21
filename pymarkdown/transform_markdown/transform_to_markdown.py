@@ -1,6 +1,7 @@
 """
 Module to provide for a transformation from tokens to a markdown document.
 """
+
 import collections
 import inspect
 import logging
@@ -16,6 +17,7 @@ from pymarkdown.tokens.container_markdown_token import ContainerMarkdownToken
 from pymarkdown.tokens.end_of_stream_token import SpecialMarkdownToken
 from pymarkdown.tokens.inline_markdown_token import InlineMarkdownToken
 from pymarkdown.tokens.leaf_markdown_token import LeafMarkdownToken
+from pymarkdown.tokens.list_start_markdown_token import ListStartMarkdownToken
 from pymarkdown.tokens.markdown_token import (
     EndMarkdownToken,
     MarkdownToken,
@@ -112,7 +114,9 @@ class TransformToMarkdown:
         current_token_type = token_type
         token_name = None
         token_class = None
-        assert "get_markdown_token_type" in token_type.__dict__
+        assert (
+            "get_markdown_token_type" in token_type.__dict__
+        ), "Must be present in dictionary."
         token_name = token_type.__dict__["get_markdown_token_type"].__func__()
 
         while current_token_type not in [
@@ -122,7 +126,7 @@ class TransformToMarkdown:
             SpecialMarkdownToken,
         ]:
             new_bases = list(current_token_type.__bases__)
-            assert len(new_bases) == 1
+            assert len(new_bases) == 1, "Only one."
             current_token_type = new_bases[0]
         if current_token_type == ContainerMarkdownToken:
             token_class = MarkdownTokenClass.CONTAINER_BLOCK
@@ -131,11 +135,12 @@ class TransformToMarkdown:
         elif current_token_type == InlineMarkdownToken:
             token_class = MarkdownTokenClass.INLINE_BLOCK
         else:
-            assert current_token_type == SpecialMarkdownToken
+            assert current_token_type == SpecialMarkdownToken, "Default is special."
             token_class = MarkdownTokenClass.SPECIAL
 
-        assert token_name is not None
-        assert token_class is not None
+        assert (
+            token_name is not None and token_class is not None
+        ), "Both must be defined."
         return token_name, token_class
 
     def register_handlers(
@@ -153,7 +158,7 @@ class TransformToMarkdown:
             MarkdownTokenClass.LEAF_BLOCK,
             MarkdownTokenClass.INLINE_BLOCK,
             MarkdownTokenClass.SPECIAL,
-        ]
+        ], "Must be one of three classes."
 
         self.start_token_handlers[type_name] = start_token_handler
         if end_token_handler:
@@ -169,7 +174,9 @@ class TransformToMarkdown:
         Register the handlers necessary to deal with token's start and end.
         """
         type_name, type_class = self.__get_token_type_info(token_type)
-        assert type_class in [MarkdownTokenClass.CONTAINER_BLOCK]
+        assert type_class in [
+            MarkdownTokenClass.CONTAINER_BLOCK
+        ], "Must be of class CONTAINER_BLOCK"
 
         self.start_container_token_handlers[type_name] = start_token_handler
         if end_token_handler:
@@ -190,6 +197,10 @@ class TransformToMarkdown:
         POGGER.debug("---\nTransformToMarkdown\n---")
 
         for token_index, current_token in enumerate(actual_tokens):
+            if current_token.is_list_start:
+                list_token = cast(ListStartMarkdownToken, current_token)
+                list_token.reset_last_list_item()
+
             next_token = (
                 actual_tokens[token_index + 1]
                 if token_index < len(actual_tokens) - 1
@@ -238,13 +249,20 @@ class TransformToMarkdown:
         transformed_data = self.__correct_for_final_newline(
             transformed_data, actual_tokens
         )
+        transformed_data = (
+            transformed_data.replace(ParserLogger.start_range_sequence, "")
+            .replace(ParserLogger.end_range_sequence, "")
+            .replace(ParserLogger.blah_sequence, "")
+        )
         if pragma_token:
             transformed_data = self.__handle_pragma_processing(
                 pragma_token, transformed_data
             )
 
-        assert not self.context.block_stack
-        assert not self.context.container_token_stack
+        assert not self.context.block_stack, "Nothing must be left at the end."
+        assert (
+            not self.context.container_token_stack
+        ), "Nothing must be left at the end."
         return transformed_data
 
     @classmethod

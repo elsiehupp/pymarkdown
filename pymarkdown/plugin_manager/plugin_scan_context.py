@@ -1,10 +1,11 @@
 """
 Module to provide context when reporting any errors.
 """
+
 from __future__ import annotations
 
 from io import TextIOWrapper
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Union
 
 from typing_extensions import override
 
@@ -13,6 +14,7 @@ from pymarkdown.plugin_manager.fix_line_record import FixLineRecord
 from pymarkdown.plugin_manager.fix_token_record import FixTokenRecord
 from pymarkdown.plugin_manager.plugin_modify_context import PluginModifyContext
 from pymarkdown.plugin_manager.plugin_scan_failure import PluginScanFailure
+from pymarkdown.plugin_manager.replace_tokens_record import ReplaceTokensRecord
 from pymarkdown.tokens.markdown_token import MarkdownToken
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -33,6 +35,7 @@ class PluginScanContext(PluginModifyContext):
         fix_mode: bool,
         file_output: Optional[TextIOWrapper],
         fix_token_map: Optional[Dict[MarkdownToken, List[FixTokenRecord]]],
+        replace_tokens_list: Optional[List[ReplaceTokensRecord]],
     ):
         self.owning_manager, self.scan_file, self.line_number = (
             owning_manager,
@@ -46,8 +49,25 @@ class PluginScanContext(PluginModifyContext):
         self.__line_change_record: List[FixLineRecord] = []
         self.__file_output = file_output
         self.__fix_token_map = fix_token_map
+        self.__replace_token_list = replace_tokens_list
 
     # pylint: enable=too-many-arguments
+
+    def register_replace_tokens_request(
+        self,
+        plugin_id: str,
+        start_token: MarkdownToken,
+        end_token: MarkdownToken,
+        replacement_tokens: List[MarkdownToken],
+    ) -> None:
+        """
+        Register a sequence of tokens and what to replace them with.
+        """
+        assert self.__replace_token_list is not None
+        new_record = ReplaceTokensRecord(
+            plugin_id, start_token, end_token, replacement_tokens
+        )
+        self.__replace_token_list.append(new_record)
 
     # pylint: disable=too-many-arguments
     def register_fix_token_request(
@@ -82,6 +102,13 @@ class PluginScanContext(PluginModifyContext):
         """
         assert self.__fix_token_map is not None
         return self.__fix_token_map
+
+    def get_replace_tokens_list(self) -> List[ReplaceTokensRecord]:
+        """
+        Get the current list of replacement records/tokens.
+        """
+        assert self.__replace_token_list is not None
+        return self.__replace_token_list
 
     @property
     @override
@@ -187,6 +214,12 @@ class PluginScanContext(PluginModifyContext):
         for next_entry in reported_and_sorted:
             self.owning_manager.log_scan_failure(next_entry)
         self.__reported.clear()
+
+    def get_triggered_rules(self) -> Set[str]:
+        """
+        Get information on any rules that were triggered.
+        """
+        return {next_entry.rule_id.lower() for next_entry in self.__reported}
 
 
 # pylint: enable=too-many-instance-attributes

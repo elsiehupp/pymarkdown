@@ -137,6 +137,7 @@ goto error_end
 if defined RESET_PIPFILE (
 	echo {Syncing python packages with new PipEnv 'Pipfile'.}
 	erase Pipfile.lock
+	pipenv lock
 	pipenv update -d
 	if ERRORLEVEL 1 (
 		echo.
@@ -147,22 +148,6 @@ if defined RESET_PIPFILE (
 
 if defined MY_MYPY (
 	goto executeMyPy
-)
-
-echo {Executing black formatter on Python code.}
-pipenv run black %MY_VERBOSE% .
-if ERRORLEVEL 1 (
-	echo.
-	echo {Executing black formatter on Python code failed.}
-	goto error_end
-)
-
-echo {Executing import sorter on Python code.}
-pipenv run isort %MY_VERBOSE% .
-if ERRORLEVEL 1 (
-	echo.
-	echo {Executing import sorter on Python code failed.}
-	goto error_end
 )
 
 echo {Executing pre-commit hooks on Python code.}
@@ -215,60 +200,14 @@ if not defined MY_SOURCERY (
 	)
 )
 
-echo {Executing flake8 static analyzer on Python code.}
-pipenv run flake8 -j 4 --exclude dist,build %MY_VERBOSE%
-if ERRORLEVEL 1 (
-	echo.
-	echo {Executing static analyzer on Python code failed.}
-	goto error_end
-)
-
-echo {Executing bandit security analyzer on Python code.}
-pipenv run bandit --configfile bandit.yaml -q -r %PYTHON_MODULE_NAME%
-if ERRORLEVEL 1 (
-	echo.
-	echo {Executing security analyzer on Python code failed.}
-	goto error_end
-)
-
-echo {Executing pylint static analyzer on Python source code.}
-set TEST_EXECUTION_FAILED=
-pipenv run pylint -j 1 --recursive=y %MY_VERBOSE% %PYTHON_MODULE_NAME%
-if ERRORLEVEL 1 (
-	echo.
-	echo {Executing pylint static analyzer on Python source code failed.}
-	goto error_end
-)
-
-:executeMyPy
-echo {Executing mypy static analyzer on Python source code.}
-pipenv run mypy --strict %PYTHON_MODULE_NAME% stubs
-if ERRORLEVEL 1 (
-	echo.
-	echo {Executing mypy static analyzer on Python source code failed.}
-	goto error_end
-)
-rem pipenv run stubgen --output stubs -p columnar
-rem pipenv run stubgen --output stubs -p wcwidth
-if defined MY_MYPY (
-	goto good_end
-)
-
 echo {Executing pylint utils analyzer on Python source code to verify suppressions and document them.}
-pipenv run python ..\pylint_utils\main.py --config setup.cfg --recurse -r publish\pylint_suppression.json %PYTHON_MODULE_NAME%
+echo pipenv run pylint_utils --config setup.cfg --recurse -r publish\pylint_suppression.json %PYTHON_MODULE_NAME%
+pipenv run pylint_utils --config setup.cfg --recurse -r publish\pylint_suppression.json %PYTHON_MODULE_NAME%
 if ERRORLEVEL 1 (
 	echo.
 	echo {Executing reporting of pylint suppressions in Python source code failed.}
 	goto error_end
 )
-
-echo {Executing pylint static analyzer on test Python code.}
-pipenv run pylint -j 1 --ignore test\resources --recursive=y %MY_VERBOSE% test
-if ERRORLEVEL 1 (
-	echo.
-	echo {Executing pylint static analyzer on test Python code failed.}
-	goto error_end
-)	
 
 git diff --name-only --staged > %CLEAN_TEMPFILE%
 set ALL_FILES=
@@ -291,7 +230,7 @@ if "%ALL_FILES%" == "" (
 	echo {Not executing pylint suppression checker on Python source code. No eligible Python files staged.}
 ) else (
 	echo {Executing pylint suppression checker on Python source code.}
-	pipenv run python ..\pylint_utils\main.py -s %ALL_FILES%
+	pipenv run pylint_utils -s %ALL_FILES%
 	if ERRORLEVEL 1 (
 		echo.
 		echo {Executing reporting of unused pylint suppressions in modified Python source code failed.}
